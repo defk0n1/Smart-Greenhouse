@@ -1,0 +1,16 @@
+\babel@toc {english}{}\relax 
+\contentsline {chapter}{\numberline {1}Concept}{2}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Problematic}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Context of the Project}{2}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Ambitions}{2}{section.1.3}%
+\contentsline {chapter}{\numberline {2}Target Audience}{3}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Equipment}{4}{chapter.3}%
+\contentsline {chapter}{\numberline {4}Functionalities}{5}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Sensor Data Acquisition}{5}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Mobile Application Development}{5}{section.4.2}%
+\contentsline {section}{\numberline {4.3}Backend and Communication}{5}{section.4.3}%
+\contentsline {section}{\numberline {4.4}Security}{5}{section.4.4}%
+\contentsline {chapter}{\numberline {5}Machine Learning Integration}{6}{chapter.5}%
+\contentsline {section}{\numberline {5.1}Model Development}{6}{section.5.1}%
+\contentsline {section}{\numberline {5.2}MLOps (Machine Learning Operations)}{6}{section.5.2}%
+\contentsline {section}{\numberline {5.3}Dataset}{6}{section.5.3}%
