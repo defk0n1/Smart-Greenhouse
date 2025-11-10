@@ -1,7 +1,8 @@
 package tn.supcom.cot.iam.controllers.managers;
 
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
+//import jakarta.inject.Singleton;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import tn.supcom.cot.iam.controllers.Role;
 import tn.supcom.cot.iam.controllers.repositories.GrantRepository;
@@ -15,7 +16,7 @@ import tn.supcom.cot.iam.entities.Tenant;
 import java.util.HashSet;
 import java.util.Optional;
 
-@Singleton
+@ApplicationScoped
 public class PhoenixIAMManager {
     @Inject
     private IdentityRepository identityRepository;

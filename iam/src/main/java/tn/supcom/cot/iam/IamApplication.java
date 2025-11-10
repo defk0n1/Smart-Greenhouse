@@ -18,7 +18,7 @@ public class IamApplication extends Application {
     @ApplicationScoped
     public static final class CDIConfigurator {  /*pour configurer l'application*/
         @Inject
-        @ConfigProperty(name = "jwt.realm") /*variable d'environnement JWT_REALM*/
+        @ConfigProperty(name = "jwt.realm" , defaultValue = "local-realm") /*variable d'environnement JWT_REALM*/
         private String realm;
 
         @Produces

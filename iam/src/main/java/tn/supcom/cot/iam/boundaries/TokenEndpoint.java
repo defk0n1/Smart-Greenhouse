@@ -2,6 +2,7 @@ package tn.supcom.cot.iam.boundaries;
 
 import jakarta.ejb.EJB;
 import jakarta.inject.Inject;
+import jakarta.enterprise.context.RequestScoped;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
@@ -24,6 +25,7 @@ import java.security.GeneralSecurityException;
 import java.util.Set;
 
 @Path("/oauth/token")
+@RequestScoped
 public class TokenEndpoint {
     private final Set<String> supportedGrantTypes = Set.of("authorization_code", "refresh_token");
 
