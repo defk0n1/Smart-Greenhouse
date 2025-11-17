@@ -1,0 +1,268 @@
+[
+    {
+        "id": "a1b2c3d4.e5f6",
+        "type": "tab",
+        "label": "Lecture CSV progressive 10s",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "inject_fan1_on",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Fan1 ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "once": false,
+        "topic": "",
+        "payload": "{\"fan1\":1}",
+        "payloadType": "str",
+        "x": 1020,
+        "y": 380,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_fan1_off",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Fan1 OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"fan1\":0}",
+        "payloadType": "str",
+        "x": 1020,
+        "y": 420,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_fan2_on",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Fan2 ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"fan2\":1}",
+        "payloadType": "str",
+        "x": 1020,
+        "y": 480,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_fan2_off",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Fan2 OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"fan2\":0}",
+        "payloadType": "str",
+        "x": 1020,
+        "y": 520,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_pump_on",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Pump ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"pump\":1}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 600,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_pump_off",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Pump OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"pump\":0}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 640,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_bulb1_on",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Bulb1 ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"bulb1\":1}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 720,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_bulb1_off",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Bulb1 OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"bulb1\":0}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 760,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_bulb2_on",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Bulb2 ON",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"bulb2\":1}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 820,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "inject_bulb2_off",
+        "type": "inject",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Bulb2 OFF",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "payload": "{\"bulb2\":0}",
+        "payloadType": "str",
+        "x": 1010,
+        "y": 860,
+        "wires": [
+            [
+                "mqtt_control"
+            ]
+        ]
+    },
+    {
+        "id": "mqtt_control",
+        "type": "mqtt out",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Send Control → ESP32",
+        "topic": "greenhouse/control",
+        "qos": "0",
+        "retain": "",
+        "broker": "mqtt_test_server",
+        "x": 1310,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "mqtt_data_in",
+        "type": "mqtt in",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Data from ESP32",
+        "topic": "greenhouse/data",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "mqtt_test_server",
+        "nl": false,
+        "rap": false,
+        "inputs": 0,
+        "x": 1030,
+        "y": 940,
+        "wires": [
+            [
+                "debug_data"
+            ]
+        ]
+    },
+    {
+        "id": "debug_data",
+        "type": "debug",
+        "z": "a1b2c3d4.e5f6",
+        "name": "Afficher data",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "x": 1320,
+        "y": 940,
+        "wires": []
+    },
+    {
+        "id": "mqtt_test_server",
+        "type": "mqtt-broker",
+        "name": "Mosquitto Test",
+        "broker": "test.mosquitto.org",
+        "port": "1883",
+        "clientid": "",
+        "usetls": false,
+        "keepalive": "60",
+        "cleansession": true
+    }
+]
