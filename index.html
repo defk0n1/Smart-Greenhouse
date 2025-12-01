@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Greenhouse 3D Viewer</title>
-    
+
     <!-- PWA Metadata -->
     <meta name="theme-color" content="#1a1a1a">
     <meta name="description" content="Interactive 3D visualization of a greenhouse with sensors">
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/png" href="icons/icon-192x192.png">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    
-    <!-- Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- Import Maps for ES Modules -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <!-- App Files -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <div id="container"></div>
-    
+
     <div id="loading">
         <div class="loading-content">
             <div class="spinner"></div>
@@ -31,7 +40,24 @@
         </div>
     </div>
 
+    <!-- Left Gauge Panel -->
+    <div id="gaugesLeft" class="gauge-panel gauge-panel-left">
+        <canvas id="gaugeTemp" class="gauge-canvas" width="180" height="200"></canvas>
+        <canvas id="gaugeHumidity" class="gauge-canvas" width="180" height="200"></canvas>
+        <canvas id="gaugeSoil" class="gauge-canvas" width="180" height="200"></canvas>
+    </div>
+
+    <!-- Right Gauge Panel -->
+    <div id="gaugesRight" class="gauge-panel gauge-panel-right">
+        <canvas id="gaugeGas" class="gauge-canvas" width="180" height="200"></canvas>
+        <canvas id="gaugeWater" class="gauge-canvas" width="180" height="200"></canvas>
+        <canvas id="gaugePH" class="gauge-canvas" width="180" height="200"></canvas>
+    </div>
+
     <div id="controls">
+        <div id="userInfo" class="user-info">
+            <span id="userName">User</span>
+        </div>
         <button class="btn" id="resetButton">
             <span>↻</span>
             <span>Reset View</span>
@@ -39,6 +65,10 @@
         <button class="btn" id="rotateButton">
             <span id="rotateIcon">⏸</span>
             <span id="rotateText">Pause</span>
+        </button>
+        <button class="btn" id="logoutButton">
+            <span>⎋</span>
+            <span>Logout</span>
         </button>
     </div>
 
@@ -71,6 +101,16 @@
                 <div class="info-item">
                     <div class="info-label">Battery</div>
                     <div class="info-value" id="batteryLevel">--</div>
+                </div>
+            </div>
+            <!-- Actuator Controls (shown only for actuators) -->
+            <div id="actuatorControlsInPopup" style="display: none;">
+                <div class="actuator-control-section">
+                    <h4 class="control-title">Control Actuator</h4>
+                    <div class="toggle-buttons-popup">
+                        <button class="toggle-btn toggle-off" id="actuatorOffBtn">OFF</button>
+                        <button class="toggle-btn toggle-on" id="actuatorOnBtn">ON</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -129,9 +169,189 @@
         <button id="dismissButton">No thanks</button>
     </div>
 
-    <!-- JavaScript Files -->
-    <script src="js/mvp.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/sw.js"></script>
+
+    <!-- JavaScript Files as ES Modules -->
+    <script type="module">
+        // Import dependencies
+        import { authManager } from './js/auth.js';
+        import { API_CONFIG } from './js/config.js';
+
+        // Make available globally
+        window.authManager = authManager;
+        window.API_CONFIG = API_CONFIG;
+
+        // Authentication check (after modules are loaded)
+        async function checkAuthentication() {
+            // 1. Check for OAuth callback (code) FIRST
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('code')) {
+                console.log('OAuth code received, processing...');
+                const code = urlParams.get('code');
+                const state = urlParams.get('state');
+                const storedState = sessionStorage.getItem('pkce_state');
+                const codeVerifier = sessionStorage.getItem('pkce_code_verifier');
+
+                // En dev local, on peut être plus souple si le state est perdu
+                if (state === storedState || window.location.hostname === 'localhost') {
+                    console.log('State validation passed (or skipped for localhost)');
+
+                    // Exchange authorization code for cookie
+                    const result = await authManager.handleCallback(code, codeVerifier);
+
+                    if (result.success) {
+                        // Clean up session storage
+                        sessionStorage.removeItem('pkce_code_verifier');
+                        sessionStorage.removeItem('pkce_state');
+                        sessionStorage.removeItem('redirect_after_login');
+
+                        // Clean up URL and reload without query parameters
+                        const cleanUrl = window.location.origin + window.location.pathname;
+                        window.history.replaceState({}, document.title, cleanUrl);
+
+                        console.log('Authentication successful! Reloading app...');
+                        window.location.reload();
+                        return; // Stop execution here
+                    } else {
+                        console.error('Token exchange failed:', result.error);
+                        alert('Authentication failed: ' + result.error);
+                        // Clear URL and reload to restart flow cleanly
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                        window.location.reload();
+                        return;
+                    }
+                } else {
+                    console.error('State mismatch! Possible CSRF attack.');
+                    console.error('Received:', state);
+                    console.error('Stored:', storedState);
+                }
+            }
+
+            // 2. Check authentication before loading the main application
+            // Wait for session check to complete
+            const isAuthenticated = await authManager.checkSession();
+
+            if (API_CONFIG.AUTH_REQUIRED && !isAuthenticated) {
+
+                // Loop protection
+                const loopCount = parseInt(sessionStorage.getItem('auth_loop_count') || '0');
+                const lastLoopTime = parseInt(sessionStorage.getItem('auth_loop_time') || '0');
+                const now = Date.now();
+
+                if (now - lastLoopTime > 10000) {
+                    // Reset counter if last attempt was > 10s ago
+                    sessionStorage.setItem('auth_loop_count', '1');
+                    sessionStorage.setItem('auth_loop_time', now.toString());
+                } else {
+                    if (loopCount > 3) {
+                        console.error('🛑 Infinite redirect loop detected. Stopping.');
+                        document.body.innerHTML = `
+                            <div style="padding: 20px; text-align: center; color: white;">
+                                <h1>Erreur d'authentification</h1>
+                                <p>Une boucle de redirection a été détectée.</p>
+                                <p>Impossible de vérifier la session (Cookie manquant ou invalide).</p>
+                                <button onclick="sessionStorage.clear(); window.location.reload()">Réessayer</button>
+                                <br><br>
+                                <small>Ouvrez la console (F12) pour voir les détails.</small>
+                            </div>
+                        `;
+                        throw new Error('Infinite redirect loop');
+                    }
+                    sessionStorage.setItem('auth_loop_count', (loopCount + 1).toString());
+                    sessionStorage.setItem('auth_loop_time', now.toString());
+                }
+
+                // Redirect to IAM login using AuthManager
+                console.log('User not authenticated, redirecting to IAM login...');
+                // authManager.login(); // Disable auto-redirect for debugging if needed, but keep enabled for now
+
+                // Show a temporary message before redirecting
+                const statusDiv = document.createElement('div');
+                statusDiv.style.position = 'fixed';
+                statusDiv.style.top = '0';
+                statusDiv.style.left = '0';
+                statusDiv.style.width = '100%';
+                statusDiv.style.background = 'rgba(255,0,0,0.8)';
+                statusDiv.style.color = 'white';
+                statusDiv.style.padding = '10px';
+                statusDiv.style.textAlign = 'center';
+                statusDiv.style.zIndex = '9999';
+                statusDiv.innerText = 'Authentification requise. Redirection vers le login...';
+                document.body.appendChild(statusDiv);
+
+                setTimeout(() => {
+                    authManager.login();
+                }, 1000); // Wait 1s to see the message
+
+                // Stop script execution to prevent loading the app
+                throw new Error('Authentication required');
+            } else {
+                // Authenticated - reset loop counter
+                sessionStorage.removeItem('auth_loop_count');
+            }
+        }
+
+        // Run authentication check
+        checkAuthentication();
+    </script>
+
+    <!-- Load MVP and Main app after auth check -->
+    <script type="module" src="js/mvp.js"></script>
+    <script type="module" src="js/main.js"></script>
+
+    <!-- Service Worker Registration -->
+    <script type="module">
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('sw.js');
+                    console.log('✓ Service Worker enregistré avec succès:', registration.scope);
+                } catch (error) {
+                    console.error('✗ Échec de l\'enregistrement du Service Worker:', error);
+                }
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installButton = document.getElementById('installButton');
+        const dismissButton = document.getElementById('dismissButton');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Empêcher la mini-barre d'information de s'afficher automatiquement
+            e.preventDefault();
+            // Stocker l'événement pour pouvoir le déclencher plus tard
+            deferredPrompt = e;
+            // Afficher notre propre UI d'installation
+            installPrompt.style.display = 'flex';
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+
+            // Afficher la boîte de dialogue d'installation
+            deferredPrompt.prompt();
+
+            // Attendre la réponse de l'utilisateur
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(outcome === 'accepted' ? '✓ PWA installée' : '✗ Installation refusée');
+
+            // Reset la variable car elle ne peut être utilisée qu'une fois
+            deferredPrompt = null;
+            installPrompt.style.display = 'none';
+        });
+
+        dismissButton.addEventListener('click', () => {
+            installPrompt.style.display = 'none';
+        });
+
+        // Détecter si l'app est déjà installée
+        window.addEventListener('appinstalled', () => {
+            console.log('✓ PWA a été installée avec succès!');
+            installPrompt.style.display = 'none';
+        });
+    </script>
 </body>
+
 </html>

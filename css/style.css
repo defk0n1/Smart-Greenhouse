@@ -51,18 +51,22 @@ body {
 }
 
 @keyframes spin {
-    to { transform: rotate(360deg); }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Controls */
 #controls {
     position: absolute;
     top: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     display: none;
     gap: 12px;
     z-index: 100;
-    flex-direction: column;
+    flex-direction: row;
+    /* Horizontal */
 }
 
 #controls.visible {
@@ -70,7 +74,8 @@ body {
 }
 
 .btn {
-    background: linear-gradient(135deg, #334155 0%, #475569 100%);
+    background: rgba(0, 0, 0, 0.6);
+    /* Fond noir semi-transparent unifié */
     color: white;
     border: none;
     padding: 14px 20px;
@@ -88,13 +93,55 @@ body {
 }
 
 .btn:hover {
-    background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+    background: rgba(0, 0, 0, 0.8);
+    /* Plus foncé au survol */
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .btn:active {
     transform: translateY(0);
+}
+
+/* Specific button colors - keeping subtle colored borders/shadows for distinction if desired, or fully unifying */
+#logoutButton {
+    /* Optional: keep a subtle red hint on hover or border, but base is dark */
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Ensure it uses the unified shadow */
+}
+
+#logoutButton:hover {
+    background: rgba(220, 38, 38, 0.8);
+    /* Red tint on hover for logout */
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+/* User Info Display */
+.user-info {
+    background: rgba(0, 0, 0, 0.6);
+    /* Fond noir semi-transparent unifié */
+    color: white;
+    padding: 14px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info::before {
+    content: "👤";
+    font-size: 16px;
+}
+
+#userName {
+    color: #ffffff;
 }
 
 /* Popup Styles */
@@ -103,24 +150,29 @@ body {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-    color: white;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: rgba(0, 0, 0, 0.85);
+    /* Fond noir plus opaque pour le popup pour la lisibilité */
     padding: 30px;
-    border-radius: 16px;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
     z-index: 1000;
-    min-width: 420px;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow-y: auto;
+    width: 90%;
+    max-width: 400px;
     backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .popup.active {
     display: block;
     animation: popupIn 0.3s ease-out;
+    opacity: 1;
+    /* Added for the new transition */
+    transform: translate(-50%, -50%) scale(1);
+    /* Added for the new transition */
 }
 
 @keyframes popupIn {
@@ -128,6 +180,7 @@ body {
         opacity: 0;
         transform: translate(-50%, -50%) scale(0.9);
     }
+
     to {
         opacity: 1;
         transform: translate(-50%, -50%) scale(1);
@@ -209,8 +262,15 @@ body {
 }
 
 @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
 }
 
 .status-text {
@@ -345,6 +405,7 @@ body {
         opacity: 0;
         transform: translateX(-50%) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -378,34 +439,155 @@ body {
         min-width: 90vw;
         padding: 20px;
     }
-    
+
     .chart-popup {
         min-width: 90vw;
     }
-    
+
     .sensor-info {
         grid-template-columns: 1fr;
     }
-    
+
     #installPrompt {
         min-width: 90vw;
         flex-direction: column;
         gap: 15px;
         text-align: center;
     }
-    
+
     #controls {
         right: 10px;
         top: 10px;
     }
-    
+
     .btn {
         padding: 12px 16px;
         font-size: 13px;
     }
 }
 
+/* Actuator Controls in Popup */
+.actuator-control-section {
+    margin-top: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.control-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.toggle-buttons-popup {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 6px;
+    border-radius: 10px;
+}
+
+.toggle-btn {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    transform: translateY(-2px);
+}
+
+.toggle-btn.active.toggle-on {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+}
+
+.toggle-btn.active.toggle-off {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.5);
+}
+
 /* Utility Classes */
 .hidden {
     display: none !important;
+}
+
+/* Gauge Panels */
+.gauge-panel {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 25px 20px;
+    background: transparent;
+    /* Totalement transparent */
+    border-radius: 16px;
+    border: none;
+    /* Pas de bordure */
+    z-index: 50;
+    opacity: 0;
+    animation: slideIn 0.6s ease-out forwards;
+}
+
+.gauge-panel-left {
+    left: 20px;
+    animation-delay: 0.2s;
+}
+
+.gauge-panel-right {
+    right: 20px;
+    animation-delay: 0.4s;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.gauge-canvas {
+    display: block;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+    transition: transform 0.3s ease, filter 0.3s ease;
+    cursor: pointer;
+}
+
+.gauge-canvas:hover {
+    transform: scale(1.08);
+    filter: drop-shadow(0 6px 15px rgba(0, 0, 0, 0.5));
+}
+
+
+/* Hide gauges on small screens */
+@media (max-width: 1200px) {
+    .gauge-panel {
+        display: none;
+    }
 }
