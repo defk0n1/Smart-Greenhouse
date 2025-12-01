@@ -214,7 +214,7 @@
         "type": "mqtt out",
         "z": "a1b2c3d4.e5f6",
         "name": "Send Control → ESP32",
-        "topic": "greenhouse/control",
+        "topic": "iot/control",
         "qos": "0",
         "retain": "",
         "broker": "mqtt_test_server",
@@ -227,7 +227,7 @@
         "type": "mqtt in",
         "z": "a1b2c3d4.e5f6",
         "name": "Data from ESP32",
-        "topic": "greenhouse/data",
+        "topic": "iot/data",
         "qos": "0",
         "datatype": "json",
         "broker": "mqtt_test_server",
@@ -257,12 +257,14 @@
     {
         "id": "mqtt_test_server",
         "type": "mqtt-broker",
-        "name": "Mosquitto Test",
-        "broker": "test.mosquitto.org",
-        "port": "1883",
+        "name": "HiveMQ Cloud",
+        "broker": "f7650e29f2d1418ab38a502a12ae2a8e.s1.eu.hivemq.cloud",
+        "port": "8883",
         "clientid": "",
-        "usetls": false,
+        "usetls": true,
         "keepalive": "60",
-        "cleansession": true
+        "cleansession": true,
+        "user": "marwen",
+        "password": "M1arwen#"
     }
 ]
