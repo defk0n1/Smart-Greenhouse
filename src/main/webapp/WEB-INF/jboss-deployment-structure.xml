@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jboss-deployment-structure xmlns="urn:jboss:deployment-structure:1.2">
+    <deployment>
+        <!-- Exclude WildFly modules that might conflict with our packaged libraries -->
+        <exclusions>
+            <!-- Prevent WildFly from trying to provide these modules -->
+            <module name="org.apache.commons.lang3" />
+        </exclusions>
+        
+        <!-- Use libraries packaged in WEB-INF/lib -->
+        <dependencies>
+            <!-- Explicitly state we need these from our WAR/JAR -->
+        </dependencies>
+    </deployment>
+</jboss-deployment-structure>
