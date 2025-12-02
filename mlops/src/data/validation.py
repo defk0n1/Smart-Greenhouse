@@ -181,7 +181,8 @@ class ValueRangeCheck(BaseCheck):
         column: str,
         min_value: Optional[float] = None,
         max_value: Optional[float] = None,
-        name: str = "value_range_check"
+        name: str = "value_range_check",
+        fail_on_missing: bool = True
     ):
         """
         Initialize value range check.
@@ -191,18 +192,21 @@ class ValueRangeCheck(BaseCheck):
             min_value: Minimum allowed value
             max_value: Maximum allowed value
             name: Check name
+            fail_on_missing: Whether to fail if column is missing
         """
         super().__init__(name)
         self.column = column
         self.min_value = min_value
         self.max_value = max_value
+        self.fail_on_missing = fail_on_missing
 
     def run(self, data: pd.DataFrame) -> ValidationResult:
         """Run value range check."""
         if self.column not in data.columns:
+            status = ValidationStatus.FAILED if self.fail_on_missing else ValidationStatus.WARNING
             return ValidationResult(
                 check_name=self.name,
-                status=ValidationStatus.WARNING,
+                status=status,
                 message=f"Column '{self.column}' not found"
             )
 
@@ -241,7 +245,8 @@ class ClassBalanceCheck(BaseCheck):
         self,
         column: str,
         min_ratio: float = 0.05,
-        name: str = "class_balance_check"
+        name: str = "class_balance_check",
+        fail_on_missing: bool = True
     ):
         """
         Initialize class balance check.
@@ -250,17 +255,20 @@ class ClassBalanceCheck(BaseCheck):
             column: Column containing class labels
             min_ratio: Minimum ratio for each class
             name: Check name
+            fail_on_missing: Whether to fail if column is missing
         """
         super().__init__(name)
         self.column = column
         self.min_ratio = min_ratio
+        self.fail_on_missing = fail_on_missing
 
     def run(self, data: pd.DataFrame) -> ValidationResult:
         """Run class balance check."""
         if self.column not in data.columns:
+            status = ValidationStatus.FAILED if self.fail_on_missing else ValidationStatus.WARNING
             return ValidationResult(
                 check_name=self.name,
-                status=ValidationStatus.WARNING,
+                status=status,
                 message=f"Column '{self.column}' not found"
             )
 

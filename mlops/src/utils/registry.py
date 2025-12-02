@@ -399,8 +399,10 @@ class ModelRegistry:
         artifact_path = f"{self.entity}/{self.project}/{name}:{version}"
         artifact = api.artifact(artifact_path)
 
-        # Add stage alias
-        artifact.aliases.append(to_stage.value)
+        # Add stage alias (handle existing aliases)
+        stage_value = to_stage.value
+        if stage_value not in artifact.aliases:
+            artifact.aliases.append(stage_value)
         artifact.save()
 
     def _promote_local(
