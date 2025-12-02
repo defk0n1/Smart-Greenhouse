@@ -1,0 +1,235 @@
+# Data Configuration
+# This file contains all data ingestion, preprocessing, and versioning settings
+
+# =============================================================================
+# Data Ingestion Configuration
+# =============================================================================
+ingestion:
+  # Source type: local, s3, gcs, azure, http, database
+  source_type: "local"
+  
+  # Local storage settings
+  local:
+    path: "/data/raw"
+    format: "csv"  # Options: csv, parquet, json, image_folder
+    
+  # S3 storage settings (if source_type: "s3")
+  s3:
+    bucket: "your-bucket-name"
+    prefix: "data/raw/"
+    region: "us-east-1"
+    
+  # GCS storage settings (if source_type: "gcs")
+  gcs:
+    bucket: "your-bucket-name"
+    prefix: "data/raw/"
+    project: "your-project-id"
+    
+  # HTTP/API settings (if source_type: "http")
+  http:
+    url: "https://api.example.com/data"
+    auth_type: "bearer"  # Options: none, basic, bearer, api_key
+    headers: {}
+    
+  # Database settings (if source_type: "database")
+  database:
+    type: "postgresql"
+    host: "localhost"
+    port: 5432
+    database: "mldata"
+    query: "SELECT * FROM training_data"
+
+# =============================================================================
+# Data Splitting Configuration
+# =============================================================================
+splitting:
+  strategy: "random"  # Options: random, stratified, temporal, custom
+  train_ratio: 0.7
+  val_ratio: 0.15
+  test_ratio: 0.15
+  shuffle: true
+  stratify_column: "label"  # For stratified splitting
+
+# =============================================================================
+# Data Validation Configuration
+# =============================================================================
+validation:
+  enabled: true
+  
+  # Schema validation
+  schema:
+    enforce: true
+    columns:
+      - name: "feature_1"
+        type: "float"
+        nullable: false
+        min_value: 0.0
+        max_value: 1.0
+      - name: "feature_2"
+        type: "float"
+        nullable: false
+      - name: "label"
+        type: "int"
+        nullable: false
+        values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        
+  # Data quality checks
+  quality_checks:
+    - type: "null_check"
+      columns: ["feature_1", "feature_2", "label"]
+      threshold: 0.0
+    - type: "duplicate_check"
+      threshold: 0.01
+    - type: "value_range"
+      column: "feature_1"
+      min_value: 0.0
+      max_value: 1.0
+    - type: "class_balance"
+      column: "label"
+      min_ratio: 0.05
+      
+  # Statistical drift detection
+  drift_detection:
+    enabled: true
+    reference_data: "production_baseline"
+    metrics:
+      - "ks_statistic"
+      - "psi"
+    threshold: 0.1
+
+# =============================================================================
+# Preprocessing Configuration
+# =============================================================================
+preprocessing:
+  # Numerical features
+  numerical:
+    strategy: "standard"  # Options: standard, minmax, robust, none
+    handle_outliers:
+      enabled: true
+      method: "clip"  # Options: clip, remove, winsorize
+      threshold: 3.0  # Z-score threshold
+      
+  # Categorical features
+  categorical:
+    strategy: "onehot"  # Options: onehot, label, target, ordinal
+    handle_unknown: "ignore"
+    
+  # Missing values
+  missing_values:
+    numerical_strategy: "mean"  # Options: mean, median, most_frequent, constant
+    categorical_strategy: "most_frequent"
+    fill_value: null
+
+# =============================================================================
+# Feature Engineering Configuration
+# =============================================================================
+feature_engineering:
+  enabled: true
+  
+  # Feature selection
+  feature_selection:
+    enabled: true
+    method: "mutual_info"  # Options: mutual_info, variance, correlation, rfe
+    k_best: 50
+    variance_threshold: 0.01
+    correlation_threshold: 0.95
+    
+  # Feature transformations
+  transformations:
+    - type: "polynomial"
+      columns: ["feature_1", "feature_2"]
+      degree: 2
+    - type: "interaction"
+      column_pairs: [["feature_1", "feature_2"]]
+    - type: "log"
+      columns: ["feature_3"]
+      
+  # Dimensionality reduction
+  dimensionality_reduction:
+    enabled: false
+    method: "pca"  # Options: pca, umap, tsne
+    n_components: 50
+
+# =============================================================================
+# Image Preprocessing Configuration (if applicable)
+# =============================================================================
+image:
+  enabled: false
+  resize: [224, 224]
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  
+  # Training augmentations
+  augmentation:
+    enabled: true
+    techniques:
+      - type: "random_horizontal_flip"
+        p: 0.5
+      - type: "random_vertical_flip"
+        p: 0.2
+      - type: "random_rotation"
+        degrees: 15
+      - type: "color_jitter"
+        brightness: 0.2
+        contrast: 0.2
+        saturation: 0.2
+        hue: 0.1
+      - type: "random_resized_crop"
+        size: [224, 224]
+        scale: [0.8, 1.0]
+      - type: "random_erasing"
+        p: 0.1
+        
+  # Test/validation augmentations
+  test_augmentation:
+    enabled: true
+    techniques:
+      - type: "center_crop"
+        size: [224, 224]
+
+# =============================================================================
+# Data Versioning Configuration
+# =============================================================================
+versioning:
+  enabled: true
+  strategy: "hash"  # Options: hash, timestamp, semantic
+  
+  # Hash-based versioning
+  hash:
+    algorithm: "sha256"
+    include_schema: true
+    
+  # Storage for versions
+  storage:
+    type: "local"  # Options: local, s3, gcs, wandb
+    path: "/data/versions"
+    
+  # Metadata to track
+  metadata:
+    - "row_count"
+    - "column_count"
+    - "schema"
+    - "statistics"
+    - "source_path"
+    - "created_at"
+
+# =============================================================================
+# Data Caching Configuration
+# =============================================================================
+caching:
+  enabled: true
+  backend: "disk"  # Options: memory, disk, redis
+  path: "/data/cache"
+  max_size_gb: 10
+  ttl_hours: 24
+
+# =============================================================================
+# Output Paths
+# =============================================================================
+output:
+  processed_data_path: "/data/processed"
+  train_path: "/data/processed/train"
+  val_path: "/data/processed/val"
+  test_path: "/data/processed/test"
+  metadata_path: "/data/metadata"

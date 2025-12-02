@@ -1,0 +1,227 @@
+# Experiment Configuration
+# This file contains W&B integration and experiment tracking settings
+
+# =============================================================================
+# Weights & Biases Configuration
+# =============================================================================
+wandb:
+  # Project settings
+  project: "mlops-pipeline"
+  entity: null  # Your W&B username or team name (uses env var if null)
+  
+  # Run settings
+  name: null  # Auto-generated if null
+  notes: "Training run"
+  tags:
+    - "experiment"
+  group: null  # Group related runs
+  job_type: "training"
+  
+  # Mode: online, offline, disabled
+  mode: "online"
+  
+  # Logging settings
+  log_frequency: 10  # Log metrics every N batches
+  log_gradients: true
+  log_model: true
+  
+  # Code saving
+  save_code: true
+  
+  # Resume settings
+  resume: "allow"  # allow, must, never, auto
+  resume_id: null  # Specific run ID to resume
+  
+  # Artifact settings
+  artifacts:
+    log_model: true
+    log_dataset: false
+    model_artifact_type: "model"
+    dataset_artifact_type: "dataset"
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  
+  # Format: structured (JSON) or simple (plain text)
+  format: "structured"
+  
+  # Output destinations
+  handlers:
+    - type: "console"
+      level: "INFO"
+    - type: "file"
+      level: "DEBUG"
+      path: "/logs/training.log"
+      max_size_mb: 100
+      backup_count: 5
+      
+  # W&B console logging
+  wandb_console: true
+  
+  # Progress bar settings
+  progress_bar:
+    enabled: true
+    leave: true
+    dynamic_ncols: true
+
+# =============================================================================
+# Metrics Configuration
+# =============================================================================
+metrics:
+  # Training metrics to log
+  training:
+    - name: "train_loss"
+      type: "loss"
+      aggregation: "mean"
+    - name: "train_accuracy"
+      type: "accuracy"
+      aggregation: "mean"
+    - name: "learning_rate"
+      type: "scalar"
+      aggregation: "last"
+      
+  # Validation metrics
+  validation:
+    - name: "val_loss"
+      type: "loss"
+      aggregation: "mean"
+    - name: "val_accuracy"
+      type: "accuracy"
+      aggregation: "mean"
+    - name: "val_precision"
+      type: "precision"
+      aggregation: "mean"
+    - name: "val_recall"
+      type: "recall"
+      aggregation: "mean"
+    - name: "val_f1"
+      type: "f1"
+      aggregation: "mean"
+      
+  # Primary metric for model selection
+  primary_metric:
+    name: "val_f1"
+    mode: "max"  # max or min
+    
+  # System metrics (logged automatically by W&B)
+  system:
+    enabled: true
+    gpu: true
+    cpu: true
+    memory: true
+    network: true
+    disk: true
+
+# =============================================================================
+# Model Registry Configuration
+# =============================================================================
+registry:
+  # Registry type: wandb, local, mlflow
+  type: "wandb"
+  
+  # Model naming
+  model_name: "mlops-model"
+  version_prefix: "v"
+  
+  # Stages
+  stages:
+    - "dev"
+    - "staging"
+    - "production"
+    
+  # Model metadata to store
+  metadata:
+    - "training_config"
+    - "data_version"
+    - "metrics"
+    - "environment"
+    - "git_commit"
+    
+  # Best model selection
+  selection:
+    metric: "val_f1"
+    mode: "max"
+    threshold: 0.8  # Minimum metric value to register
+    
+  # Promotion rules
+  promotion:
+    auto_promote: false
+    staging_threshold: 0.85
+    production_threshold: 0.90
+    require_approval: true
+
+# =============================================================================
+# Experiment Comparison Configuration
+# =============================================================================
+comparison:
+  # Default metrics for comparison
+  metrics:
+    - "val_loss"
+    - "val_accuracy"
+    - "val_f1"
+    - "train_time"
+    
+  # Visualization settings
+  visualization:
+    enabled: true
+    types:
+      - "line_chart"
+      - "scatter_plot"
+      - "bar_chart"
+      - "confusion_matrix"
+
+# =============================================================================
+# Alerting Configuration
+# =============================================================================
+alerting:
+  enabled: false
+  
+  # Slack notifications
+  slack:
+    enabled: false
+    webhook_url: null  # Set via environment variable
+    channels:
+      - "#ml-alerts"
+    events:
+      - "training_started"
+      - "training_completed"
+      - "training_failed"
+      - "model_promoted"
+      
+  # Email notifications
+  email:
+    enabled: false
+    smtp_host: null
+    smtp_port: 587
+    from_address: null
+    recipients: []
+    events:
+      - "training_failed"
+      - "model_promoted"
+
+# =============================================================================
+# Reproducibility Configuration
+# =============================================================================
+reproducibility:
+  # Track Git info
+  git:
+    enabled: true
+    log_diff: true
+    
+  # Track environment
+  environment:
+    log_python_version: true
+    log_packages: true
+    log_system_info: true
+    
+  # Track configuration
+  config:
+    log_all: true
+    sensitive_keys:
+      - "api_key"
+      - "password"
+      - "secret"
