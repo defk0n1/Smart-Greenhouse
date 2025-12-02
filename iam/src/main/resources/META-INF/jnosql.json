@@ -1,0 +1,8 @@
+{
+  "document": {
+    "mongodb": {
+      "host": "localhost:27017",
+      "database": "iam_database"
+    }
+  }
+}

@@ -48,6 +48,27 @@
             <version>1.1.10</version>
         </dependency>
 
+        <!-- Jakarta NoSQL Mapping -->
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-document</artifactId>
+            <version>1.1.10</version>
+        </dependency>
+
+        <!-- CDI integration -->
+        <dependency>
+            <groupId>org.eclipse.jnosql.mapping</groupId>
+            <artifactId>jnosql-mapping-core</artifactId>
+            <version>1.1.10</version>
+        </dependency>
+
+        <!-- MongoDB Java Driver -->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-sync</artifactId>
+            <version>4.11.1</version>
+        </dependency>
+
         <!-- NEW: MicroProfile Config API -->
         <dependency>
             <groupId>org.eclipse.microprofile.config</groupId>

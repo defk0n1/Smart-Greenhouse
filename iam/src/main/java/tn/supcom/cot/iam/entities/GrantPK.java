@@ -1,10 +1,7 @@
 package tn.supcom.cot.iam.entities;
 
-
-
 import jakarta.nosql.Column;
 import jakarta.nosql.Embeddable;
-
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -13,10 +10,11 @@ public class GrantPK implements Serializable {
 
     @Column
     private String tenantId;
+
     @Column
     private String identityId;
 
-    public GrantPK(){
+    public GrantPK() {
     }
 
     public String getTenantId() {
@@ -35,11 +33,27 @@ public class GrantPK implements Serializable {
         this.identityId = identityId;
     }
 
+    public String toCompositeId() {
+        return tenantId + "::" + identityId;
+    }
+
+    public static GrantPK fromCompositeId(String compositeId) {
+        if (compositeId == null || !compositeId.contains("::")) {
+            return null;
+        }
+        String[] parts = compositeId.split("::");
+        GrantPK pk = new GrantPK();
+        pk.setTenantId(parts[0]);
+        pk.setIdentityId(parts[1]);
+        return pk;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof GrantPK grantPK)) return false;
-        return Objects.equals(tenantId, grantPK.tenantId) && Objects.equals(identityId, grantPK.identityId);
+        return Objects.equals(tenantId, grantPK.tenantId) &&
+                Objects.equals(identityId, grantPK.identityId);
     }
 
     @Override
