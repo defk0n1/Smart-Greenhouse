@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse - Sign Up</title>
+    <!-- Bootstrap CSS and Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+            padding: 2rem 0;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+
+            50% {
+                transform: translate(100px, 100px) rotate(180deg);
+            }
+        }
+
+        .signup-container {
+            width: 100%;
+            max-width: 520px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.9rem 1.1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+            color: white;
+        }
+
+        .input-group-text {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding-right: 1rem;
+        }
+
+        .eye-icon {
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s ease;
+        }
+
+        .eye-icon:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            padding: 0.9rem;
+            border-radius: 12px;
+            width: 100%;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        }
+
+        .btn-signup:active {
+            transform: translateY(0);
+        }
+
+        /* Password strength meter */
+        .password-strength-meter {
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            border-radius: 3px;
+        }
+
+        .password-strength-bar.weak {
+            width: 33%;
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .password-strength-bar.medium {
+            width: 66%;
+            background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .password-requirements {
+            font-size: 13px;
+            margin-top: 0.75rem;
+        }
+
+        .requirement {
+            color: #64748b;
+            transition: color 0.3s;
+            margin-bottom: 0.25rem;
+        }
+
+        .requirement.met {
+            color: #10b981;
+        }
+
+        .requirement.met i {
+            color: #10b981;
+        }
+
+        .error-message {
+            color: #fca5a5;
+            font-size: 13px;
+            margin-top: 0.5rem;
+        }
+
+        #backendError {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 1rem;
+            border-radius: 12px;
+            color: #fca5a5;
+            font-size: 14px;
+            display: none;
+        }
+
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #60a5fa;
+        }
+
+        @media (max-width: 640px) {
+            .signup-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="signup-container">
+        <div class="logo-container">
+            <div class="logo">🌱</div>
+            <h2>Create Account</h2>
+            <p class="subtitle">Join Smart Greenhouse today</p>
+        </div>
+
+        <form id="registerForm" action="/iam/rest-iam/register" method="POST">
+            <div class="mb-3">
+                <input type="text" id="username" name="username" class="form-control" placeholder="Username" required
+                    autocomplete="username">
+                <small class="error-message d-none" id="usernameError">Username is required</small>
+            </div>
+
+            <div class="mb-3">
+                <input type="email" id="email" name="email" class="form-control" placeholder="Email" required
+                    autocomplete="email">
+                <small class="error-message d-none" id="emailError">Valid email is required</small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <input type="password" id="password" name="password" class="form-control"
+                        placeholder="Create a strong password" required autocomplete="new-password">
+                    <span class="input-group-text" id="togglePassword">
+                        <i class="bi bi-eye-slash-fill eye-icon"></i>
+                    </span>
+                </div>
+
+                <!-- Password Strength Meter -->
+                <div class="password-strength-meter">
+                    <div id="strengthBar" class="password-strength-bar"></div>
+                </div>
+                <small id="strengthText" style="color: #94a3b8; font-size: 13px;"></small>
+
+                <!-- Password Requirements -->
+                <div class="password-requirements">
+                    <div class="requirement" id="req-length">
+                        <i class="bi bi-circle"></i> At least 8 characters
+                    </div>
+                    <div class="requirement" id="req-uppercase">
+                        <i class="bi bi-circle"></i> One uppercase letter
+                    </div>
+                    <div class="requirement" id="req-lowercase">
+                        <i class="bi bi-circle"></i> One lowercase letter
+                    </div>
+                    <div class="requirement" id="req-number">
+                        <i class="bi bi-circle"></i> One number
+                    </div>
+                    <div class="requirement" id="req-special">
+                        <i class="bi bi-circle"></i> One special character (!@#$%^&*)
+                    </div>
+                </div>
+
+                <small class="error-message d-none" id="passwordError">Password does not meet requirements</small>
+            </div>
+
+            <div id="backendError"></div>
+
+            <button type="submit" class="btn btn-signup mb-3">Create Account</button>
+
+            <div class="text-center">
+                <a href="#" id="loginLink">Already have an account? Sign in →</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function () {
+            const passwordField = document.getElementById('password');
+            const icon = this.querySelector('i');
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            icon.classList.toggle('bi-eye-slash-fill');
+            icon.classList.toggle('bi-eye-fill');
+        });
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            let strength = 0;
+            const requirements = {
+                length: password.length >= 8,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /[0-9]/.test(password),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+            };
+
+            // Update requirement indicators
+            document.getElementById('req-length').classList.toggle('met', requirements.length);
+            document.getElementById('req-uppercase').classList.toggle('met', requirements.uppercase);
+            document.getElementById('req-lowercase').classList.toggle('met', requirements.lowercase);
+            document.getElementById('req-number').classList.toggle('met', requirements.number);
+            document.getElementById('req-special').classList.toggle('met', requirements.special);
+
+            // Update icons
+            Object.keys(requirements).forEach(key => {
+                const el = document.getElementById(`req-${key}`).querySelector('i');
+                if (requirements[key]) {
+                    el.className = 'bi bi-check-circle-fill';
+                } else {
+                    el.className = 'bi bi-circle';
+                }
+            });
+
+            // Calculate strength
+            if (requirements.length) strength++;
+            if (requirements.uppercase) strength++;
+            if (requirements.lowercase) strength++;
+            if (requirements.number) strength++;
+            if (requirements.special) strength++;
+
+            const strengthBar = document.getElementById('strengthBar');
+            const strengthText = document.getElementById('strengthText');
+
+            if (password.length === 0) {
+                strengthBar.className = 'password-strength-bar';
+                strengthText.textContent = '';
+            } else if (strength <= 2) {
+                strengthBar.className = 'password-strength-bar weak';
+                strengthText.textContent = 'Weak password ⚠️';
+                strengthText.style.color = '#ef4444';
+            } else if (strength <= 4) {
+                strengthBar.className = 'password-strength-bar medium';
+                strengthText.textContent = 'Medium password ⚡';
+                strengthText.style.color = '#f59e0b';
+            } else {
+                strengthBar.className = 'password-strength-bar strong';
+                strengthText.textContent = 'Strong password ✓';
+                strengthText.style.color = '#10b981';
+            }
+
+            return strength >= 4;
+        }
+
+        document.getElementById('password').addEventListener('input', function (e) {
+            checkPasswordStrength(e.target.value);
+        });
+
+        // Form submission
+        let isSubmitting = false;
+        document.getElementById('registerForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            document.getElementById('backendError').textContent = '';
+            document.getElementById('backendError').style.display = 'none';
+
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            let isValid = true;
+
+            if (!username) {
+                document.getElementById('usernameError').classList.remove('d-none');
+                isValid = false;
+            } else {
+                document.getElementById('usernameError').classList.add('d-none');
+            }
+
+            if (!email || !/\S+@\S+\.\S+/.test(email)) {
+                document.getElementById('emailError').classList.remove('d-none');
+                isValid = false;
+            } else {
+                document.getElementById('emailError').classList.add('d-none');
+            }
+
+            if (!checkPasswordStrength(password)) {
+                document.getElementById('passwordError').classList.remove('d-none');
+                isValid = false;
+            } else {
+                document.getElementById('passwordError').classList.add('d-none');
+            }
+
+            if (!isValid) {
+                isSubmitting = false;
+                return;
+            }
+
+            const formData = new FormData(this);
+            try {
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams(formData),
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    document.open();
+                    document.write(result);
+                    document.close();
+                } else {
+                    const errorText = await response.text();
+                    const parser = new DOMParser();
+                    function decodeHtmlEntities(encodedString) {
+                        const textarea = document.createElement("textarea");
+                        textarea.innerHTML = encodedString;
+                        return textarea.value;
+                    }
+                    const decodedHtml = decodeHtmlEntities(errorText);
+                    const doc = parser.parseFromString(decodedHtml, "text/html");
+                    const errorMessage = doc.querySelector("p")?.textContent;
+
+                    const backendErrorDiv = document.getElementById('backendError');
+                    backendErrorDiv.textContent = errorMessage || "An unexpected error occurred!";
+                    backendErrorDiv.style.display = 'block';
+                    isSubmitting = false;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('backendError').textContent = 'Network error: ' + err.message;
+                document.getElementById('backendError').style.display = 'block';
+                isSubmitting = false;
+            }
+        });
+
+        // Query string parser
+        function parseQueryString(string) {
+            if (string == "") { return {}; }
+            var segments = string.split("&").map(s => s.split("="));
+            var queryString = {};
+            segments.forEach(s => queryString[s[0]] = s[1]);
+            return queryString;
+        }
+
+        let q = parseQueryString(window.location.search.substring(1));
+        const loginLink = document.getElementById('loginLink');
+        if (q.redirect_uri) {
+            loginLink.href = `/iam/rest-iam/authorize?response_type=code&client_id=${q.client_id || 'smartgreenhouse'}&state=${q.state || ''}&scope=resource.read resource.write&redirect_uri=${q.redirect_uri}&code_challenge=${q.code_challenge || ''}&code_challenge_method=S256`;
+        } else {
+            loginLink.href = '/iam/rest-iam/authorize?response_type=code&client_id=smartgreenhouse&state=&scope=resource.read resource.write&redirect_uri=http://localhost:8000&code_challenge=&code_challenge_method=S256';
+        }
+    </script>
+</body>
+
+</html>

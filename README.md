@@ -32,6 +32,7 @@ The **IAM** (Identity and Access Management) module is the authentication and au
 - ✅ User registration with email validation
 - ✅ One-click account activation
 - ✅ OAuth2 authentication with Authorization Code Flow
+- ✅ **OAuth2 PKCE** (Proof Key for Code Exchange) support
 - ✅ JWT generation (Access Token + ID Token)
 - ✅ Tenant management (multi-organization)
 - ✅ Secure password hashing with Argon2
@@ -44,7 +45,7 @@ The **IAM** (Identity and Access Management) module is the authentication and au
 
 ### Complete Authentication Flow
 
-![OAuth2 Complete Authentication Flow](images/oauth2_complete_flow.png)
+![OAuth2 Complete Authentication Flow](images/Complete_Authentication_Flow.png)
 
 ### Layered Architecture
 
@@ -205,7 +206,7 @@ The `smartgreenhouse` client is the default OAuth2 client for the PWA.
 
 ```bash
 # Compile
-cd "c:\Users\marwe\Desktop\Nouveau dossier (4)\iam"
+cd iam/Smart-Greenhouse
 mvn clean package
 
 # Deploy on WildFly
@@ -229,21 +230,15 @@ IAM will be accessible at:
 
 ### 1. New User Registration
 
-![User Registration Flow](images/registration_flow.png)
+![User Registration Flow](images/New_User_Registration.png)
 
 **Example request**:
 
 ```http
 POST /rest-iam/identity/register
-Content-Type: application/json
+Content-Type: application/x-www-form-urlencoded
 
-{
-  "email": "user@example.com",
-  "password": "SecureP@ssw0rd",
-  "firstName": "John",
-  "lastName": "Doe",
-  "tenantId": "default"
-}
+email=user@example.com&password=SecureP@ssw0rd&username=JohnDoe
 ```
 
 ### 2. Account Activation
@@ -253,32 +248,36 @@ Content-Type: application/json
 http://localhost:8080/iam-1.0/rest-iam/identity/activate?token=abc123def456
 ```
 
-![Account Activation Flow](images/activation_flow.png)
+![Account Activation Flow](images/Account_Activation.png)
 
 ### 3. OAuth2 Login (Authorization Code Flow)
 
 #### Step 1: Authorization
 
+**Example Request (PKCE)**:
 ```http
 GET /rest-iam/oauth/authorize?
     client_id=smartgreenhouse&
-    redirect_uri=http://localhost:8000/callback-oauth.html&
+    redirect_uri=http://localhost:8080/index.html&
     response_type=code&
-    scope=openid profile
+    scope=resource.read resource.write&
+    state=xyz123abc&
+    code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&
+    code_challenge_method=S256
 ```
 
-**Response**: Redirects to `/Login.html` if not authenticated
+**Response**: Redirects to `/Login.html` if not authenticated, or immediately to `redirect_uri` with `code` if session exists.
 
 #### Step 2: Login
 
 User enters credentials on `/Login.html`:
 
 ```html
-<form action="/rest-iam/oauth/authorize" method="POST">
-  <input type="email" name="username" />
+```html
+<form action="http://localhost:8080/iam-1.0/rest-iam/identities/login" method="POST">
+  <input type="text" name="username" />
   <input type="password" name="password" />
-  <input type="hidden" name="client_id" value="smartgreenhouse" />
-  <input type="hidden" name="redirect_uri" value="http://localhost:8000/callback-oauth.html" />
+  <!-- Hidden parameters are handled by the session/cookie in strict OAuth2 -->
   <button type="submit">Login</button>
 </form>
 ```
@@ -298,7 +297,8 @@ Content-Type: application/x-www-form-urlencoded
 grant_type=authorization_code&
 code=eyJhbGc...&
 client_id=smartgreenhouse&
-redirect_uri=http://localhost:8000/callback-oauth.html
+redirect_uri=http://localhost:8080/index.html&
+code_verifier=dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk
 ```
 
 **Response 200 OK**:
@@ -333,18 +333,14 @@ http://localhost:8080/iam-1.0/rest-iam
 
 ```http
 POST /identity/register
-Content-Type: application/json
+Content-Type: application/x-www-form-urlencoded
 ```
 
 **Body**:
-```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!",
-  "firstName": "John",
-  "lastName": "Doe",
-  "tenantId": "default"
-}
+```
+email=user@example.com&
+password=SecurePassword123!&
+username=JohnDoe
 ```
 
 **Response 201 Created**:
@@ -530,7 +526,13 @@ The API validates JWTs by:
 1. Verifying signature with public key (retrieved via `/jwks`)
 2. Verifying expiration (`exp` claim)
 3. Verifying issuer (`iss` claim)
+3. Verifying issuer (`iss` claim)
 4. Verifying audience (`aud` claim)
+
+### OAuth2 PKCE
+The IAM module enforces **PKCE** for public clients (like the PWA).
+- **code_challenge_method**: Must be `S256`.
+- **Validation**: The `code_verifier` sent to the Token Endpoint is hashed (SHA-256) and compared with the `code_challenge` sent during Authorization.
 
 ---
 
@@ -542,17 +544,14 @@ The API validates JWTs by:
 
 ```javascript
 {
-  "_id": ObjectId("674c123abc456def78901234"),
-  "email": "user@example.com",
-  "passwordHash": "$argon2id$v=19$m=97579,t=23,p=2$...",
-  "firstName": "John",
-  "lastName": "Doe",
-  "roles": ["Client"],
-  "tenant": "default",
-  "status": "ACTIVE",           // PENDING | ACTIVE | SUSPENDED
-  "activationToken": null,       // Token for activation (null after activation)
-  "createdAt": ISODate("2025-11-25T10:00:00Z"),
-  "lastLogin": ISODate("2025-12-01T20:30:00Z")
+  "_id": "47766533-9bb3-4830-b9be-d9a1837825ed",
+  "username": "marwen",
+  "email": "marwen.bellili@supcom.tn",
+  "password": "$argon2id$v=19$m=97579,t=23,p=2$JXv3zb16kk7Qe8EYBpmdGnDIHuC3RCXwf/ElHN...",
+  "role": NumberLong("9223372036854775807"),  // ROOT Role (Long.MAX_VALUE)
+  "isAccountActivated": true,
+  "scopes": "resource:read resource:write",
+  "creationDate": "2025-12-01T21:28:25.483803800"
 }
 ```
 
@@ -561,19 +560,19 @@ The API validates JWTs by:
 - `ACTIVE`: Account activated and usable
 - `SUSPENDED`: Account suspended (by admin)
 
+> **Note on Roles**: The ROOT role is represented by `Long.MAX_VALUE` (`9223372036854775807`).
+
 #### Collection: `Tenant`
 
 ```javascript
 {
-  "_id": "default",
-  "name": "Default Tenant",
-  "domain": "greenhouse.local",
-  "adminEmail": "admin@greenhouse.local",
-  "createdAt": ISODate("2025-11-25T09:00:00Z"),
-  "settings": {
-    "allowRegistration": true,
-    "requireEmailActivation": true
-  }
+  "_id": "smartgreenhouse",
+  "tenant_name": "smartgreenhouse",
+  "allowed_roles": NumberLong(0),
+  "supported_grant_types": "authorization_code",
+  "required_scopes": "resource.read resource.write",
+  "redirect_uri": "",
+  "tenant_secret": ""
 }
 ```
 
@@ -598,53 +597,42 @@ db.Identity.createIndex({ "tenant": 1 })
 
 **Features**:
 - Registration form with client-side validation
-- Fields: Email, Password, First Name, Last Name
+- Fields: **Username**, **Email**, **Password**
 - Password strength validation
 - Error/success message display
 - Modern design with glassmorphism
+- **Form Submission**: Uses `application/x-www-form-urlencoded`
 
-**Excerpt**:
-```html
-<form id="registerForm">
-  <input type="email" name="email" required placeholder="Email" />
-  <input type="password" name="password" required placeholder="Password" />
-  <input type="text" name="firstName" required placeholder="First Name" />
-  <input type="text" name="lastName" required placeholder="Last Name" />
-  <button type="submit">Sign Up</button>
-</form>
-
-<script>
-  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+**Excerpt (Script)**:
+```javascript
+document.getElementById('registerForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const data = {
-      email: formData.get('email'),
-      password: formData.get('password'),
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      tenantId: 'default'
-    };
+    const formData = new FormData(this);
     
-    const response = await fetch('/iam-1.0/rest-iam/identity/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+    // Client-side validation logic...
+
+    const response = await fetch(this.action, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(formData),
+        credentials: 'same-origin'
     });
     
-    if (response.ok) {
-      alert('Registration successful! Please check your email.');
-    }
-  });
-</script>
+    // Handle response...
+});
 ```
 
 ### 2. Login.html
 
 **Features**:
+**Features**:
 - OAuth2 login form
-- Redirect parameter handling
+- **Dynamic Action URL**: Automatically appends `response_type`, `client_id`, `redirect_uri`, `scope`, `state`, and `code_challenge` from the query string to the form action.
 - Login error display
 - Link to registration page
+
+**Logic**:
+The page parses the URL query parameters and updates the form action to `login/authorization` with the necessary OAuth context to preserve the flow.
 
 **Access URL**:
 ```
@@ -656,10 +644,11 @@ http://localhost:8080/iam-1.0/Login.html?
 ### 3. Activate.html
 
 **Features**:
+**Features**:
 - Activation confirmation page
-- Success message
-- Automatic redirect to Login
-- Consistent design with application
+- **Auto-Activation**: Detects `token` in URL and auto-populates the form.
+- **Form Submission**: method="POST" action="/iam/rest-iam/activate"
+- Success message with automatic redirect to Login
 
 ---
 
@@ -775,7 +764,6 @@ public class JWTAuthenticationFilter implements ContainerRequestFilter {
 
 - 🔄 Password reset via email
 - 🔄 OAuth2 Refresh Token
-- 🔄 OAuth2 PKCE support for PWA
 - 🔄 2FA (Two-Factor Authentication)
 - 🔄 SSO (Single Sign-On) with SAML
 - 🔄 Login audit logs

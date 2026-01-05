@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse - Activate Account</title>
+    <!-- Bootstrap CSS and Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            bottom: -50%;
+            left: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: float 25s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(150px, -150px);
+            }
+        }
+
+        .activate-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            color: #cbd5e1;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.9rem 1.1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+            color: white;
+        }
+
+        small {
+            color: #94a3b8;
+            font-size: 13px;
+        }
+
+        .btn-activate {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            padding: 0.9rem;
+            border-radius: 12px;
+            width: 100%;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-activate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        }
+
+        .btn-activate:active {
+            transform: translateY(0);
+        }
+
+        .btn-activate:disabled {
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message-box {
+            padding: 1rem 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+            font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-box.success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
+        }
+
+        .message-box.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .message-box.info {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        a {
+            color: #94a3b8;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #3b82f6;
+        }
+
+        @media (max-width: 640px) {
+            .activate-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="activate-container">
+        <div class="logo-container">
+            <div class="logo">🔑</div>
+            <h2>Activate Account</h2>
+            <p class="subtitle">Enter your activation code to complete registration</p>
+        </div>
+
+        <!-- Message Box -->
+        <div id="messageBox" class="message-box"></div>
+
+        <form id="activateForm" action="/iam/rest-iam/register/activate" method="POST">
+            <div class="mb-3">
+                <label for="activationCode" class="form-label">Activation Code</label>
+                <input type="text" id="activationCode" name="code" class="form-control"
+                    placeholder="Enter your activation code" required autocomplete="one-time-code">
+                <small>Check your email for the activation code</small>
+            </div>
+
+            <button type="submit" id="activateBtn" class="btn btn-activate mb-4">
+                <span id="btnText">Activate Account</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm d-none"></span>
+            </button>
+
+            <div class="text-center">
+                <a href="/iam/rest-iam/register/authorize">← Back to Login</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function showMessage(message, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+        }
+
+        function setLoading(loading) {
+            const btn = document.getElementById('activateBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            btn.disabled = loading;
+            if (loading) {
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+            } else {
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+            }
+        }
+
+        async function handleActivation(e) {
+            e.preventDefault();
+
+            const form = document.getElementById('activateForm');
+            const formData = new FormData(form);
+            const code = formData.get('code');
+
+            if (!code || code.trim() === '') {
+                showMessage('Please enter an activation code', 'error');
+                return;
+            }
+
+            setLoading(true);
+            showMessage('Activating your account...', 'info');
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: new URLSearchParams(formData),
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    showMessage('✅ Account activated successfully! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:8000';
+                    }, 2000);
+                } else {
+                    const errorText = await response.text();
+                    showMessage(`❌ Activation failed: ${errorText || 'Invalid or expired activation code'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Activation error:', error);
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Auto-activate if token is in URL
+        function checkUrlToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (code) {
+                document.getElementById('activationCode').value = code;
+                showMessage('Activation code detected. Click "Activate Account" to continue.', 'info');
+            }
+        }
+
+        document.getElementById('activateForm').addEventListener('submit', handleActivation);
+        window.addEventListener('load', checkUrlToken);
+    </script>
+</body>
+
+</html>

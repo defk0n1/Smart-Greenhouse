@@ -50,8 +50,11 @@ public class OAuthTokenEndpoint {
         }
 
         // Common cookie builder
+        // IMPORTANT: Set domain to "localhost" to share cookie across ports (8080,
+        // 8081, etc.) during development
         NewCookie.Builder cookieBuilder = new NewCookie.Builder("access_token")
                 .path("/")
+                .domain("localhost") // Enable cross-port cookie sharing
                 .httpOnly(true)
                 .secure(false) // Set to true in production
                 .maxAge(ConfigProvider.getConfig().getValue("jwt.lifetime.duration", Integer.class))
@@ -89,6 +92,7 @@ public class OAuthTokenEndpoint {
                             && refreshSubject.equals(subject)) {
                         return Response.ok(Json.createObjectBuilder()
                                 .add("token_type", "Bearer")
+                                .add("access_token", accessToken)
                                 .add("expires_in",
                                         ConfigProvider.getConfig().getValue("jwt.lifetime.duration", Integer.class))
                                 .add("scope", scopes)
@@ -122,6 +126,7 @@ public class OAuthTokenEndpoint {
 
             return Response.ok(Json.createObjectBuilder()
                     .add("token_type", "Bearer")
+                    .add("access_token", accessToken)
                     .add("expires_in", ConfigProvider.getConfig().getValue("jwt.lifetime.duration", Integer.class))
                     .add("scope", decoded.approvedScopes())
                     .add("refresh_token", refreshToken)
@@ -131,11 +136,16 @@ public class OAuthTokenEndpoint {
                     .header("Pragma", "no-cache")
                     .build();
         } catch (GeneralSecurityException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         } catch (WebApplicationException e) {
+            e.printStackTrace();
             return e.getResponse();
         } catch (Exception e) {
-            return responseError("Invalid_request", "Can't get token", Response.Status.INTERNAL_SERVER_ERROR);
+            e.printStackTrace();
+            System.out.println("DEBUG: OAuthTokenEndpoint failure: " + e.getMessage());
+            return responseError("Invalid_request", "Can't get token: " + e.getMessage(),
+                    Response.Status.INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -1,6 +1,5 @@
 package com.greenhouse.controllers.managers;
 
-import jakarta.ejb.EJBException;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.apache.commons.lang3.tuple.Pair;
@@ -64,7 +63,7 @@ public class IdentityManager {
         Pair<String, LocalDateTime> codeDetails = activationCodes.get(code);
 
         if (codeDetails == null) {
-            throw new EJBException("Invalid activation code.");
+            throw new IllegalStateException("Invalid activation code.");
         }
         String email = codeDetails.getLeft();
         LOGGER.info("Activated Identity: " + email);
@@ -72,10 +71,10 @@ public class IdentityManager {
         if (LocalDateTime.now().isAfter(expirationTime)) {
             activationCodes.remove(code);
             deleteIdentityByEmail(email);
-            throw new EJBException("Activation code expired.");
+            throw new IllegalStateException("Activation code expired.");
         }
         Identity identity = identityRepository.findByEmail(email)
-                .orElseThrow(() -> new EJBException("Identity associated with the activation code not found."));
+                .orElseThrow(() -> new IllegalStateException("Identity associated with the activation code not found."));
         identity.setAccountActivated(true);
         identityRepository.save(identity);
         activationCodes.remove(code);
@@ -83,16 +82,16 @@ public class IdentityManager {
 
     private void validateIdentity(String username, String email) {
         if (identityRepository.findByUsername(username).isPresent()) {
-            throw new EJBException("An identity with username '" + username + "' already exists.");
+            throw new IllegalStateException("An identity with username '" + username + "' already exists.");
         }
         if (identityRepository.findByEmail(email).isPresent()) {
-            throw new EJBException("An identity with email '" + email + "' already exists.");
+            throw new IllegalStateException("An identity with email '" + email + "' already exists.");
         }
         if (username == null || username.isEmpty()) {
-            throw new EJBException("Username is required.");
+            throw new IllegalStateException("Username is required.");
         }
         if (email == null || email.isEmpty()) {
-            throw new EJBException("Email is required.");
+            throw new IllegalStateException("Email is required.");
         }
     }
 
@@ -129,17 +128,17 @@ public class IdentityManager {
     // Get Identity by ID
     public Identity getIdentityById(Long id) {
         return identityRepository.findById(id.toString())
-                .orElseThrow(() -> new EJBException("Identity not found with ID: " + id));
+                .orElseThrow(() -> new IllegalStateException("Identity not found with ID: " + id));
     }
 
     public Identity updateIdentity(Long id, String username, String email, String newPassword, String currentPassword) {
         // Step 1: Get the current identity by ID
         Identity identity = identityRepository.findById(id.toString())
-                .orElseThrow(() -> new EJBException("Identity not found with ID: " + id));
+                .orElseThrow(() -> new IllegalStateException("Identity not found with ID: " + id));
 
         // Step 2: Verify if the provided current password matches the stored password
         if (!argon2Utils.check(identity.getPassword(), currentPassword.toCharArray())) {
-            throw new EJBException("Current password is incorrect.");
+            throw new IllegalStateException("Current password is incorrect.");
         }
         // Step 3: Update the identity details
         identity.setUsername(username);
@@ -159,23 +158,36 @@ public class IdentityManager {
     // Delete Identity by ID
     public void deleteIdentityById(Long id) {
         Identity identity = identityRepository.findById(id.toString())
-                .orElseThrow(() -> new EJBException("Identity not found with ID: " + id));
+                .orElseThrow(() -> new IllegalStateException("Identity not found with ID: " + id));
         identityRepository.delete(identity);
     }
 
     private void validatePassword(String password) {
         if (password == null || password.isEmpty()) {
-            throw new EJBException("Password is required.");
+            throw new IllegalStateException("Password is required.");
         }
         if (password.length() < MIN_PASSWORD_LENGTH) {
-            throw new EJBException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
+            throw new IllegalStateException("Password must be at least " + MIN_PASSWORD_LENGTH + " characters long.");
         }
         if (!password.matches(".*\\d.*")) { // At least one digit
-            throw new EJBException("Password must contain at least one number.");
+            throw new IllegalStateException("Password must contain at least one number.");
         }
         if (!password.matches(".*[!@#$%^&*(),.?\":{}|<>].*")) { // At least one special character
-            throw new EJBException("Password must contain at least one special character.");
+            throw new IllegalStateException("Password must contain at least one special character.");
         }
+    }
+
+    // Admin: Get All Identities
+    public java.util.List<Identity> getAllIdentities() {
+        return identityRepository.findAll().collect(java.util.stream.Collectors.toList());
+    }
+
+    // Admin: Update Identity Status (no password check)
+    public void updateIdentityStatus(Long id, boolean isAccountActivated) {
+        Identity identity = identityRepository.findById(id.toString())
+                .orElseThrow(() -> new IllegalStateException("Identity not found with ID: " + id));
+        identity.setAccountActivated(isAccountActivated);
+        identityRepository.save(identity);
     }
 
 }

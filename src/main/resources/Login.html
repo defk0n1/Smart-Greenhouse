@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse - Login</title>
+    <!-- Bootstrap CSS and Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background elements */
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0);
+            }
+
+            50% {
+                transform: translate(-100px, -100px);
+            }
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 0.5rem;
+        }
+
+        h2 {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 15px;
+            margin-bottom: 2rem;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.9rem 1.1rem;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+            color: white;
+        }
+
+        .input-group-text {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding-right: 1rem;
+        }
+
+        .eye-icon {
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s ease;
+        }
+
+        .eye-icon:hover {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border: none;
+            padding: 0.9rem;
+            border-radius: 12px;
+            width: 100%;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            background: linear-gradient(135deg, #475569 0%, #64748b 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .forgot-password {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #3b82f6;
+        }
+
+        .create-account {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .create-account:hover {
+            color: #60a5fa;
+        }
+
+        .message-box {
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-box.error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .spinner-border-sm {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15em;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .login-container {
+                margin: 1rem;
+                padding: 2rem 1.5rem;
+            }
+        }
+    </style>
+    <script>
+        function showMessage(message, type) {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type}`;
+            messageBox.style.display = 'block';
+        }
+
+        function setLoading(loading) {
+            const btn = document.querySelector('.btn-login');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+
+            btn.disabled = loading;
+            if (loading) {
+                btnText.classList.add('d-none');
+                btnSpinner.classList.remove('d-none');
+            } else {
+                btnText.classList.remove('d-none');
+                btnSpinner.classList.add('d-none');
+            }
+        }
+
+        function parseQueryString(string) {
+            if (string == "") { return {}; }
+            var segments = string.split("&").map(s => s.split("="));
+            var queryString = {};
+            segments.forEach(s => queryString[s[0]] = s[1]);
+            return queryString;
+        }
+        function base64ArrayBuffer(arrayBuffer) {
+            let base64 = '';
+            const encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+            let bytes = new Uint8Array(arrayBuffer);
+            let byteLength = bytes.byteLength;
+            let byteRemainder = byteLength % 3;
+            let mainLength = byteLength - byteRemainder;
+
+            let a, b, c, d;
+            let chunk;
+
+            // Main loop deals with bytes in chunks of 3
+            for (let i = 0; i < mainLength; i = i + 3) {
+                // Combine the three bytes into a single integer
+                chunk = (bytes[i] << 16) | (bytes[i + 1] << 8) | bytes[i + 2];
+
+                // Use bitmasks to extract 6-bit segments from the triplet
+                a = (chunk & 16515072) >> 18; // 16515072 = (2^6 - 1) << 18
+                b = (chunk & 258048) >> 12; // 258048   = (2^6 - 1) << 12
+                c = (chunk & 4032) >> 6; // 4032     = (2^6 - 1) << 6
+                d = chunk & 63;               // 63       = 2^6 - 1
+
+                // Convert the raw binary segments to the appropriate ASCII encoding
+                base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d];
+            }
+
+            // Deal with the remaining bytes and padding
+            if (byteRemainder === 1) {
+                chunk = bytes[mainLength];
+
+                a = (chunk & 252) >> 2; // 252 = (2^6 - 1) << 2
+
+                // Set the 4 least significant bits to zero
+                b = (chunk & 3) << 4; // 3   = 2^2 - 1
+
+                base64 += encodings[a] + encodings[b] + '==';
+            } else if (byteRemainder === 2) {
+                chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1];
+
+                a = (chunk & 64512) >> 10; // 64512 = (2^6 - 1) << 10
+                b = (chunk & 1008) >> 4; // 1008  = (2^6 - 1) << 4
+
+                // Set the 2 least significant bits to zero
+                c = (chunk & 15) << 2; // 15    = 2^4 - 1
+
+                base64 += encodings[a] + encodings[b] + encodings[c] + '=';
+            }
+
+            return base64;
+        }
+
+
+        async function signIn(e) {
+            e.preventDefault();
+            let loginForm = document.getElementById('signInForm');
+            let payload = new FormData(loginForm);
+
+            setLoading(true);
+            document.getElementById('messageBox').style.display = 'none';
+
+            // Submit the form naturally without fetch to avoid CORS issues with redirects
+            // The browser will handle the redirect properly
+            loginForm.removeEventListener('submit', signIn);
+            loginForm.submit();
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Main Content -->
+    <div class="login-container">
+        <div class="logo-container">
+            <div class="logo">🌱</div>
+            <h2>Smart Greenhouse</h2>
+            <p class="subtitle">Sign in to monitor your greenhouse</p>
+        </div>
+
+        <!-- Message Box -->
+        <div id="messageBox" class="message-box"></div>
+
+        <form action="login/authorization" method="POST" id="signInForm">
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Username" name="username" required
+                    autocomplete="username">
+            </div>
+
+            <div class="mb-4">
+                <div class="input-group">
+                    <input type="password" id="password" class="form-control" placeholder="Password" name="password"
+                        required autocomplete="current-password">
+                    <span class="input-group-text" id="togglePassword">
+                        <i class="bi bi-eye-slash-fill eye-icon"></i>
+                    </span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-login mb-3">
+                <span id="btnText">Sign In</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm text-light d-none"></span>
+            </button>
+
+            <div class="text-center mb-3">
+                <a href="#" class="forgot-password">Forgot your password?</a>
+            </div>
+
+            <div class="text-center">
+                <a href="#" class="create-account" id="createAccountLink">Create an account →</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Password Toggle -->
+    <script>
+        const togglePassword = document.querySelector('#togglePassword');
+        const password = document.querySelector('#password');
+        const eyeIcon = togglePassword.querySelector('i');
+
+        togglePassword.addEventListener('click', () => {
+            const type = password.type === 'password' ? 'text' : 'password';
+            password.type = type;
+            eyeIcon.classList.toggle('bi-eye-fill');
+            eyeIcon.classList.toggle('bi-eye-slash-fill');
+        });
+        const q = parseQueryString(window.location.search.substring(1));
+        const loginForm = document.getElementById('signInForm');
+        const base = loginForm.getAttribute("action");
+        if (q.response_type) {
+            loginForm.setAttribute("action", `${base}?response_type=${q.response_type}&code_challenge=${q.code_challenge}&state=${q.state}`);
+        }
+
+        // Add custom signIn handler for better error display
+        loginForm.addEventListener('submit', signIn);
+
+        // Dynamic create account link
+        const createAccountLink = document.getElementById('createAccountLink');
+        if (q.redirect_uri) {
+            createAccountLink.href = `/iam/rest-iam/register/authorize?client_id=${q.client_id || 'smartgreenhouse'}&redirect_uri=${q.redirect_uri}`;
+        } else {
+            createAccountLink.href = '/iam/rest-iam/register/authorize?client_id=smartgreenhouse&redirect_uri=http://localhost:8000';
+        }
+    </script>
+</body>
+
+</html>

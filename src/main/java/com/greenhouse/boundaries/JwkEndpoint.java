@@ -25,4 +25,11 @@ public class JwkEndpoint {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
     }
+
+    @GET
+    @Path("/keys")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getKeys() {
+        return Response.ok(jwtManager.getAllPublicKeysAsJWKS()).build();
+    }
 }

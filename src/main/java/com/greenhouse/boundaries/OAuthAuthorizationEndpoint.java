@@ -70,8 +70,9 @@ public class OAuthAuthorizationEndpoint {
         // 4. response_type validation
 
         String responseType = params.getFirst("response_type");
-        if (!"code".equals(responseType) && !"token".equals(responseType)) {
-            String error = "invalid_grant :" + responseType + ", response_type params should be code or token:";
+        if (!"code".equals(responseType)) {
+            String error = "invalid_grant :" + responseType
+                    + ", response_type param must be 'code' (OAuth 2.1 enforcement)";
             return informUserAboutError(error);
         }
         // 5. check scope
@@ -115,6 +116,11 @@ public class OAuthAuthorizationEndpoint {
             @FormParam("password") String password,
             @Context UriInfo uriInfo) throws Exception {
 
+        System.out.println("🔍 [OAuthAuthorizationEndpoint] Login POST received");
+        System.out.println("   URI: " + uriInfo.getRequestUri().toString());
+        System.out.println("   Query Params: " + uriInfo.getQueryParameters());
+        System.out.println("   Cookie present: " + (cookie != null));
+
         try {
             if (cookie == null) {
                 LOGGER.error("Cookie is missing.");
@@ -138,13 +144,21 @@ public class OAuthAuthorizationEndpoint {
 
             if (argon2Utils.check(identity.getPassword(), password.toCharArray())) {
                 MultivaluedMap<String, String> params = uriInfo.getQueryParameters();
+
+                System.out.println("✅ Password match. Building redirect...");
+                System.out.println("   response_type: " + params.getFirst("response_type"));
+                System.out.println("   state: " + params.getFirst("state"));
+                System.out.println("   code_challenge: " + params.getFirst("code_challenge"));
+
                 String redirectURI = buildActualRedirectURI(
                         cookie.getValue().split("\\$")[1],
                         params.getFirst("response_type"),
                         cookie.getValue().split("#")[0],
-                        username,
+                        identity.getUsername(),
                         "resource.read,resource.write",
                         params.getFirst("code_challenge"), params.getFirst("state"));
+
+                System.out.println("➡️  Redirecting to: " + redirectURI);
                 return Response.seeOther(UriBuilder.fromUri(redirectURI).build()).build();
             } else {
                 return Response.status(Response.Status.UNAUTHORIZED)

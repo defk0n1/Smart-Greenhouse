@@ -7,6 +7,7 @@ import com.greenhouse.security.Argon2Utils;
 
 import java.io.Serializable;
 import java.security.Principal;
+
 import java.util.UUID;
 
 @Entity("identities")
@@ -108,7 +109,8 @@ public class Identity implements Serializable, Principal {
         this.isAccountActivated = false;
     }
 
-    public Identity(String id, String username, String password, String creationDate, Long roles, boolean isAccountActivated) {
+    public Identity(String id, String username, String password, String creationDate, Long roles,
+            boolean isAccountActivated) {
         this.id = id;
         this.username = username;
         this.password = password;
@@ -140,4 +142,3 @@ public class Identity implements Serializable, Principal {
         this.password = argonUtility.hash(password.toCharArray());
     }
 }
-

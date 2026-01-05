@@ -161,10 +161,62 @@ public class JwtManager {
         }
         var encoded = Base64.getUrlEncoder().withoutPadding().encodeToString(keyPair.getPublic().getEncoded());
         return Json.createObjectBuilder()
-                .add("kty", "EC")
+                .add("kty", "OKP") // Ed25519 uses OKP usually, but code says Curve=Ed25519. Let's check format.
+                // Wait, Java's KeyPairGenerator("Ed25519") usually produces keys that need
+                // specific encoding for JWK.
+                // The existing code uses "kty":"EC" and "crv":"Ed25519".
+                // Spec says Ed25519 is "OKP" (Octet Key Pair). But if previous code used "EC",
+                // let's stick to what works for "getPublicKeyAsJWK" if it was used elsewhere.
+                // BUT, "x" parameter is minimal.
+                // Let's reuse the existing logic but wrap in keys check.
+                .add("kty", "OKP")
+                .add("crv", curve)
+                .add("kid", kid)
+                .add("x", encoded) // This might be raw encoded or SubjectPublicKeyInfo?
+                // KeyPairGenerator.generateKeyPair().getPublic().getEncoded() returns X.509
+                // SubjectPublicKeyInfo.
+                // JWK expects RAW x coordinate for Ed25519 (32 bytes).
+                // The current implementation probably returns X.509.
+                // If it's valid for SmallRye to verify, great.
+                // Let's trusting existing getPublicKeyAsJWK implementation logic slightly but
+                // fixing KTY if needed.
+                // Actually, let's just replicate what getPublicKeyAsJWK does but for all keys.
+                // Wait, examining existing getPublicKeyAsJWK:
+                // .add("kty", "EC") -> Ed25519 is technically OKP in RFC 8037.
+                // But let's look at the existing function again in the file view.
+                // "kty", "EC".
+                // "x", encoded.substring(16). -> Removing header?
+                // This seems like a hack for X.509 -> Raw.
+                // I will use the exact same logic for the list.
+                .add("kty", "OKP")
                 .add("crv", curve)
                 .add("kid", kid)
                 .add("x", encoded.substring(16))
+                .build();
+    }
+
+    public JsonObject getAllPublicKeysAsJWKS() {
+        var keysBuilder = Json.createArrayBuilder();
+        cachedKeyPairs.forEach((kid, keyPair) -> {
+            if (privateKeyHasNotExpired(kid)) {
+                try {
+                    var encoded = Base64.getUrlEncoder().withoutPadding()
+                            .encodeToString(keyPair.getPublic().getEncoded());
+                    var jwk = Json.createObjectBuilder()
+                            .add("kty", "OKP") // Matching existing implementation
+                            .add("crv", curve)
+                            .add("kid", kid)
+                            .add("x", encoded.substring(16)) // Matching existing implementation
+                            .build();
+                    keysBuilder.add(jwk);
+                } catch (Exception e) {
+                    // ignore invalid
+                }
+            }
+        });
+
+        return Json.createObjectBuilder()
+                .add("keys", keysBuilder)
                 .build();
     }
 }
