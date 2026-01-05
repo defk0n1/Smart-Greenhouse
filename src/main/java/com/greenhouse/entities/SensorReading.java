@@ -8,8 +8,12 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity("sensors")
-public class Sensor implements Serializable {
+/**
+ * Historique des lectures de capteurs
+ * Collection séparée pour stocker toutes les mesures
+ */
+@Entity("sensor_readings")
+public class SensorReading implements Serializable {
 
     @Id
     @Column("_id")
@@ -18,37 +22,26 @@ public class Sensor implements Serializable {
     @Column("sensor_id")
     private String sensorId;
 
-    @Column("type")
-    private String type;
-
     @Column("value")
     private double value;
 
-    @Column("measurement_time")
-    private LocalDateTime measurementTime;
-
-    @Column("status")
-    private String status;
+    @Column("timestamp")
+    private LocalDateTime timestamp;
 
     @Column("greenhouse_id")
     private String greenhouseId;
 
     // Constructors
-    public Sensor() {
+    public SensorReading() {
         this.id = UUID.randomUUID().toString();
     }
 
-    public Sensor(String sensorId, String type) {
+    public SensorReading(String sensorId, double value, LocalDateTime timestamp, String greenhouseId) {
         this();
         this.sensorId = sensorId;
-        this.type = type;
-        this.status = "ACTIVE";
-    }
-
-    // Update value
-    public void updateValue(double value, LocalDateTime timestamp) {
         this.value = value;
-        this.measurementTime = timestamp;
+        this.timestamp = timestamp;
+        this.greenhouseId = greenhouseId;
     }
 
     // Getters & Setters
@@ -68,14 +61,6 @@ public class Sensor implements Serializable {
         this.sensorId = sensorId;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public double getValue() {
         return value;
     }
@@ -84,20 +69,12 @@ public class Sensor implements Serializable {
         this.value = value;
     }
 
-    public LocalDateTime getMeasurementTime() {
-        return measurementTime;
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
-    public void setMeasurementTime(LocalDateTime measurementTime) {
-        this.measurementTime = measurementTime;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
     }
 
     public String getGreenhouseId() {
@@ -110,13 +87,10 @@ public class Sensor implements Serializable {
 
     @Override
     public String toString() {
-        return "Sensor{" +
-                "id='" + id + '\'' +
-                ", sensorId='" + sensorId + '\'' +
-                ", type='" + type + '\'' +
+        return "SensorReading{" +
+                "sensorId='" + sensorId + '\'' +
                 ", value=" + value +
-                ", measurementTime=" + measurementTime +
-                ", status='" + status + '\'' +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

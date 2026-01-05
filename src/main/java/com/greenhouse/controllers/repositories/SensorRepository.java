@@ -16,9 +16,16 @@ public class SensorRepository {
     @Inject
     private DocumentTemplate template;
 
-    public void save(Sensor sensor) {
+    public Sensor save(Sensor sensor) {
         template.insert(sensor);
         LOGGER.info("Saved sensor: " + sensor.getId());
+        return sensor;
+    }
+
+    public Sensor update(Sensor sensor) {
+        template.update(sensor);
+        LOGGER.info("Updated sensor: " + sensor.getId());
+        return sensor;
     }
 
     public Optional<Sensor> findById(String id) {
@@ -51,8 +58,40 @@ public class SensorRepository {
         }
     }
 
+    public Stream<Sensor> findByGreenhouseId(String greenhouseId) {
+        try {
+            return template.select(Sensor.class)
+                    .stream()
+                    .map(obj -> (Sensor) obj)
+                    .filter(sensor -> sensor.getGreenhouseId() != null
+                            && sensor.getGreenhouseId().equals(greenhouseId));
+        } catch (Exception e) {
+            LOGGER.warning("Error finding sensors by greenhouse: " + greenhouseId + " - " + e.getMessage());
+            return Stream.empty();
+        }
+    }
+
+    public Stream<Sensor> findByGreenhouseIdAndType(String greenhouseId, String type) {
+        try {
+            return template.select(Sensor.class)
+                    .stream()
+                    .map(obj -> (Sensor) obj)
+                    .filter(sensor -> sensor.getGreenhouseId() != null && sensor.getGreenhouseId().equals(greenhouseId)
+                            && sensor.getType() != null && sensor.getType().equals(type));
+        } catch (Exception e) {
+            LOGGER.warning("Error finding sensors by greenhouse and type: " + greenhouseId + ", " + type + " - "
+                    + e.getMessage());
+            return Stream.empty();
+        }
+    }
+
     public void delete(Sensor sensor) {
         template.delete(Sensor.class, sensor.getId());
         LOGGER.info("Deleted sensor: " + sensor.getId());
+    }
+
+    public void delete(String id) {
+        template.delete(Sensor.class, id);
+        LOGGER.info("Deleted sensor: " + id);
     }
 }

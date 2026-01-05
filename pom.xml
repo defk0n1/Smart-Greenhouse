@@ -62,6 +62,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <!--  MicroProfile JWT  -->
+        <dependency>
+            <groupId>org.eclipse.microprofile.jwt</groupId>
+            <artifactId>microprofile-jwt-auth-api</artifactId>
+            <version>2.1</version>
+            <scope>provided</scope>
+        </dependency>
+
         <!--  Argon2  -->
         <dependency>
             <groupId>de.mkammerer</groupId>

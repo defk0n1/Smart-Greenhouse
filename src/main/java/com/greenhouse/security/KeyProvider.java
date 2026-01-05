@@ -68,6 +68,11 @@ public class KeyProvider {
             return kf.generatePublic(new X509EncodedKeySpec(encodedKey));
 
         } catch (Exception e) {
+            System.err.println("❌ Failed to fetch public key for kid: " + kid);
+            System.err.println("   IAM URL: " + iamUrl);
+            System.err.println("   Full URL: " + iamUrl + "/jwk/" + kid);
+            System.err.println("   Error: " + e.getClass().getName() + " - " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Failed to fetch public key for kid: " + kid, e);
         }
     }

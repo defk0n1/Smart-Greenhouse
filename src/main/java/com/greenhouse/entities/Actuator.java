@@ -5,12 +5,14 @@ import jakarta.nosql.Column;
 import jakarta.nosql.Entity;
 import jakarta.nosql.Id;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-@Entity
-public class Actuator {
+@Entity("actuators")
+public class Actuator implements Serializable {
 
     @Id
     @Column("_id")
@@ -19,39 +21,118 @@ public class Actuator {
     @Column("actuator_id")
     private String actuatorId;
 
-    @Column
+    @Column("type")
     private String type;
 
-    @Column
-    private String state;
+    @Column("current_state")
+    private String currentState;
 
-    @Column
-    private double value;
+    @Column("current_value")
+    private double currentValue;
 
     @Column("last_command")
     private String lastCommand;
 
-    @Column
+    @Column("last_update")
     @JsonbDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime timestamp;
+    private LocalDateTime lastUpdate;
+
+    @Column("greenhouse_id")
+    private String greenhouseId;
+
+    @Column("state_history")
+    private List<StateChange> stateHistory;
+
+    // Inner class for state history
+    public static class StateChange implements Serializable {
+        @Column("state")
+        private String state;
+
+        @Column("value")
+        private double value;
+
+        @Column("command")
+        private String command;
+
+        @Column("timestamp")
+        private LocalDateTime timestamp;
+
+        public StateChange() {
+        }
+
+        public StateChange(String state, double value, String command, LocalDateTime timestamp) {
+            this.state = state;
+            this.value = value;
+            this.command = command;
+            this.timestamp = timestamp;
+        }
+
+        // Getters & Setters
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
+        }
+
+        public double getValue() {
+            return value;
+        }
+
+        public void setValue(double value) {
+            this.value = value;
+        }
+
+        public String getCommand() {
+            return command;
+        }
+
+        public void setCommand(String command) {
+            this.command = command;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
+        }
+    }
 
     // Constructors
     public Actuator() {
         this.id = UUID.randomUUID().toString();
+        this.stateHistory = new ArrayList<>();
     }
 
-    public Actuator(String actuatorId, String type, String state, double value, String lastCommand,
-            LocalDateTime timestamp) {
-        this.id = UUID.randomUUID().toString();
+    public Actuator(String actuatorId, String type) {
+        this();
         this.actuatorId = actuatorId;
         this.type = type;
-        this.state = state;
-        this.value = value;
-        this.lastCommand = lastCommand;
-        this.timestamp = timestamp;
     }
 
-    // Getters and Setters
+    // Add state change (keep last 100)
+    public void addStateChange(String state, double value, String command, LocalDateTime timestamp) {
+        this.currentState = state;
+        this.currentValue = value;
+        this.lastCommand = command;
+        this.lastUpdate = timestamp;
+
+        if (this.stateHistory == null) {
+            this.stateHistory = new ArrayList<>();
+        }
+
+        this.stateHistory.add(new StateChange(state, value, command, timestamp));
+
+        // Keep only last 100 state changes
+        if (this.stateHistory.size() > 100) {
+            this.stateHistory.remove(0);
+        }
+    }
+
+    // Getters & Setters
     public String getId() {
         return id;
     }
@@ -76,20 +157,38 @@ public class Actuator {
         this.type = type;
     }
 
+    public String getCurrentState() {
+        return currentState;
+    }
+
+    public void setCurrentState(String currentState) {
+        this.currentState = currentState;
+    }
+
+    // Backward compatibility
     public String getState() {
-        return state;
+        return currentState;
     }
 
     public void setState(String state) {
-        this.state = state;
+        this.currentState = state;
     }
 
+    public double getCurrentValue() {
+        return currentValue;
+    }
+
+    public void setCurrentValue(double currentValue) {
+        this.currentValue = currentValue;
+    }
+
+    // Backward compatibility
     public double getValue() {
-        return value;
+        return currentValue;
     }
 
     public void setValue(double value) {
-        this.value = value;
+        this.currentValue = value;
     }
 
     public String getLastCommand() {
@@ -100,27 +199,37 @@ public class Actuator {
         this.lastCommand = lastCommand;
     }
 
+    public LocalDateTime getLastUpdate() {
+        return lastUpdate;
+    }
+
+    public void setLastUpdate(LocalDateTime lastUpdate) {
+        this.lastUpdate = lastUpdate;
+    }
+
+    // Backward compatibility
     public LocalDateTime getTimestamp() {
-        return timestamp;
+        return lastUpdate;
     }
 
     public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+        this.lastUpdate = timestamp;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
-        Actuator actuator = (Actuator) o;
-        return Objects.equals(id, actuator.id);
+    public String getGreenhouseId() {
+        return greenhouseId;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(id);
+    public void setGreenhouseId(String greenhouseId) {
+        this.greenhouseId = greenhouseId;
+    }
+
+    public List<StateChange> getStateHistory() {
+        return stateHistory;
+    }
+
+    public void setStateHistory(List<StateChange> stateHistory) {
+        this.stateHistory = stateHistory;
     }
 
     @Override
@@ -129,10 +238,10 @@ public class Actuator {
                 "id='" + id + '\'' +
                 ", actuatorId='" + actuatorId + '\'' +
                 ", type='" + type + '\'' +
-                ", state='" + state + '\'' +
-                ", value=" + value +
-                ", lastCommand='" + lastCommand + '\'' +
-                ", timestamp=" + timestamp +
+                ", currentState='" + currentState + '\'' +
+                ", currentValue=" + currentValue +
+                ", lastUpdate=" + lastUpdate +
+                ", stateHistoryCount=" + (stateHistory != null ? stateHistory.size() : 0) +
                 '}';
     }
 }

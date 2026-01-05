@@ -28,7 +28,7 @@ public class JwtVerifier {
             JsonObject header = Json.createReader(new StringReader(headerJson)).readObject();
             String kid = header.getString("kid");
 
-            var publicKey = keyProvider.getPublicKey(kid);
+            java.security.PublicKey publicKey = keyProvider.getPublicKey(kid);
 
             Signature signature = Signature.getInstance("Ed25519");
             signature.initVerify(publicKey);
@@ -48,7 +48,11 @@ public class JwtVerifier {
 
             return Map.of(
                     "sub", payload.getString("sub"),
-                    "scope", payload.getString("scope"),
+                    "scope", payload.getString("scope", ""),
+                    "groups",
+                    payload.containsKey("groups")
+                            ? payload.getJsonArray("groups").getValuesAs(jakarta.json.JsonString::getString)
+                            : java.util.Collections.emptyList(),
                     "tenant-id", payload.getString("tenant-id"));
 
         } catch (Exception e) {

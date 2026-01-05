@@ -1,3 +1,4 @@
+
 # 🌱 Smart Greenhouse API
 
 ## 📋 Table of Contents
@@ -71,9 +72,7 @@ api/
 └── README.md
 ```
 
-### Layered Architecture
 
-![API Layered Architecture](images/api_architecture.png)
 
 ---
 
@@ -154,7 +153,8 @@ api/
 #### 1. Clone the Project
 
 ```bash
-cd "c:\Users\marwe\Desktop\Nouveau dossier (4)\api"
+git clone https://github.com/defk0n1/Smart-Greenhouse.git
+cd smart-greenhouse/api/Smart-Greenhouse
 ```
 
 #### 2. MongoDB Configuration
@@ -173,19 +173,30 @@ mongod --dbpath C:\data\db
 3. Get connection string
 4. Update `microprofile-config.properties`
 
-#### 3. MQTT Configuration (HiveMQ Cloud)
+## 🔐 Security
 
-The project currently uses **HiveMQ Cloud** with TLS/SSL.
+### Authentication (JWT)
 
-**Current settings** (in `microprofile-config.properties`):
-- **Broker**: `f7650e29f2d1418ab38a502a12ae2a8e.s1.eu.hivemq.cloud`
-- **Port**: `8883` (MQTT over TLS)
-- **Username**: `marwen`
-- **Topics**:
-  - Sensors (receive): `iot/data`
-  - Actuators (publish): `iot/control`
+The API relies on the **IAM module** for authentication. All protected endpoints require a valid **JSON Web Token (JWT)** in the `Authorization` header.
 
-> ⚠️ **Security**: For production, change MQTT credentials!
+**Header Format**:
+```http
+Authorization: Bearer <your_access_token>
+```
+
+**Token Validation Process**:
+1.  **Signature Verification**: The API uses the **Public Key** (retrieved from IAM JWKS) to verify the token's digital signature.
+2.  **Expiration Check**: Ensures the `exp` claim is in the future.
+3.  **Issuer Check**: Verifies `iss` claim matches `urn:me.greenhouse.iam`.
+4.  **Audience Check**: Verifies `aud` claim (if present).
+5.  **Role Authorization**: Checks `groups` or `roles` claim for permissions (e.g., `ADMIN`, `CLIENT`).
+
+### CORS Configuration
+
+CORS is enabled via `CORSFilter` to allow requests from the PWA:
+- **Allowed Origins**: `*` (Adjust for production)
+- **Allowed Methods**: `GET`, `POST`, `PUT`, `DELETE`, `OPTIONS`
+- **Allowed Headers**: `Content-Type`, `Authorization`, `Accept`
 
 #### 4. Configuration File
 
@@ -239,9 +250,9 @@ mvn wildfly:deploy
 #### 7. Verification
 
 The API will be accessible at:
-- **Base URL**: http://localhost:8080/smartgreenhouse/rest
+- **Base URL**: http://localhost:8080/smartgreenhouse/api
 - **OpenAPI Docs**: http://localhost:8080/smartgreenhouse/openapi
-- **Health Check**: Test with `curl http://localhost:8080/smartgreenhouse/rest/sensors`
+- **Health Check**: Test with `curl http://localhost:8080/smartgreenhouse/api/sensors`
 
 ---
 
@@ -250,7 +261,50 @@ The API will be accessible at:
 ### Base URL
 
 ```
-http://localhost:8080/smartgreenhouse/rest
+http://localhost:8080/smartgreenhouse/api
+```
+
+### 🏠 Greenhouse Endpoints
+
+#### 1. Get All Greenhouses
+
+```http
+GET /greenhouses
+```
+
+**Response 200 OK**:
+```json
+[
+  {
+    "id": "8357462a-...",
+    "name": "GH6",
+    "description": "Auto-created from MQTT topic",
+    "status": "ACTIVE",
+    "ownerId": "marwen",
+    "mqttTopic": "GH6",
+    "sensors": ["temp1"],
+    "actuators": ["fan1", "led1"]
+  }
+]
+```
+
+#### 2. Get Greenhouse Details
+
+```http
+GET /greenhouses/{id}
+```
+
+#### 3. Create Greenhouse
+
+```http
+POST /greenhouses
+```
+**Body**:
+```json
+{
+  "name": "New Greenhouse",
+  "location": "Paris"
+}
 ```
 
 ### 📊 Sensor Endpoints
@@ -265,17 +319,13 @@ GET /sensors
 ```json
 [
   {
-    "_id": "674c123abc456def78901234",
-    "temperature_indoor": 25.5,
-    "humidity_indoor": 60.2,
-    "temperature_outdoor": 18.3,
-    "humidity_outdoor": 75.1,
-    "soil_moisture": 2100,
-    "tank_level": 1500,
-    "ph_level": 2200,
-    "light_intensity": 1800,
-    "gas_level": 450,
-    "measurement_time": "2025-12-01T20:30:15Z"
+    "id": "fceeb9b5-...",
+    "sensorId": "temp1",
+    "greenhouseId": "8357462a-...",
+    "type": "temperature",
+    "value": 23.2,
+    "status": "ACTIVE",
+    "measurementTime": "2025-12-31T21:04:19.453154"
   }
 ]
 ```
@@ -298,15 +348,10 @@ Content-Type: application/json
 **Body**:
 ```json
 {
-  "TempIndoor": 26.0,
-  "HumIndoor": 62.0,
-  "TempOutdoor": 19.0,
-  "HumOutdoor": 70.0,
-  "Soil": 2050,
-  "Tank": 1400,
-  "pH": 2300,
-  "Light": 1900,
-  "Gas": 480
+  "sensorId": "TempIndoor",
+  "type": "Temperature",
+  "value": 26.0,
+  "greenhouseId": "gh1"
 }
 ```
 
@@ -320,30 +365,28 @@ GET /actuators
 
 **Response 200 OK**:
 ```json
-{
-  "Fan1": true,
-  "Fan2": true,
-  "Bulb1": false,
-  "Bulb2": true,
-  "Pump": false
-}
+[
+  {
+    "id": "5bcee084-...",
+    "actuatorId": "fan1",
+    "greenhouseId": "38009b4f-...",
+    "type": "fan",
+    "currentState": "ON",
+    "currentValue": 1.0,
+    "lastUpdate": "2026-01-04T21:10:27.852"
+  }
+]
 ```
 
 #### 2. Control Specific Actuator
 
+**Query Parameters**:
+- `command`: Command string (e.g., `ON`, `OFF`)
+- `value`: Optional numeric value
+
+**Example**:
 ```http
-POST /actuators/{actuatorName}
-Content-Type: application/json
-```
-
-**Parameters**:
-- `actuatorName`: `Fan1`, `Fan2`, `Bulb1`, `Bulb2`, or `Pump`
-
-**Body**:
-```json
-{
-  "state": true
-}
+POST /actuators/Fan1/command?command=ON
 ```
 
 **Response 200 OK**:
@@ -353,7 +396,7 @@ Content-Type: application/json
 }
 ```
 
-> 📡 **Note**: The command is published on MQTT topic `iot/control` and executed immediately by the ESP32.
+> 📡 **Note**: The command is published on the greenhouse-specific MQTT topic (e.g., `GH1/actuators`) and executed by the ESP32.
 
 ---
 
@@ -367,40 +410,42 @@ Content-Type: application/json
 
 | Topic | Direction | Description | Format |
 |-------|-----------|-------------|--------|
-| `iot/data` | ESP32 → API | Sensor data and actuator states | JSON |
-| `iot/control` | API → ESP32 | Commands for actuators | JSON |
+| `[GH]/sensors/[ID]` | ESP32 → API | Sensor data | JSON |
+| `[GH]/actuators` | API → ESP32 | Actuator command | JSON (Key-Value) |
+| `[GH]/actuators/[ID]/state` | ESP32 → API | Actuator state/feedback | JSON |
 
 ### Message Formats
 
-**Topic `iot/data` (ESP32 → API)**:
+**Topic `[GH]/sensors/[ID]` (ESP32 → API)**:
 ```json
 {
-  "TempIndoor": 25.5,
-  "HumIndoor": 60.2,
-  "TempOutdoor": 18.3,
-  "HumOutdoor": 75.1,
-  "Soil": 2100,
-  "Tank": 1500,
-  "pH": 2200,
-  "Light": 1800,
-  "Gas": 450,
-  "Fan1": 1,
-  "Fan2": 1,
-  "Bulb1": 0,
-  "Bulb2": 1,
-  "Pump": 0,
-  "Mode": "manual"
+  "sensorId": "temp1",
+  "type": "temperature",
+  "value": 23.5
 }
 ```
 
-**Topic `iot/control` (API → ESP32)**:
+**Topic `[GH]/actuators` (API → ESP32)**:
 ```json
 {
-  "Fan1": true,
-  "Fan2": false,
-  "Bulb1": true,
-  "Bulb2": false,
-  "Pump": true
+  "Fan1": 1
+}
+```
+*or*
+```json
+{
+  "led1": 0
+}
+```
+
+**Topic `[GH]/actuators/[ID]/state` (ESP32 → API)**:
+```json
+{
+  "actuatorId": "led1",
+  "name": "LED 1",
+  "type": "led",
+  "state": "OFF",
+  "value": 0
 }
 ```
 
@@ -409,7 +454,7 @@ Content-Type: application/json
 The MQTT client is managed by `MqttManager` which:
 - ✅ Automatically connects to HiveMQ Cloud broker
 - ✅ Uses TLS/SSL for secure connection
-- ✅ Subscribes to `iot/data` topic on startup
+- ✅ Subscribes to `[GH]/sensors/#` and `[GH]/actuators/#` on startup
 - ✅ Automatically reconnects on disconnection
 - ✅ Parses JSON messages and saves to MongoDB
 
@@ -467,17 +512,13 @@ Access-Control-Allow-Credentials: true
 
 ```javascript
 {
-  "_id": ObjectId("674c123abc456def78901234"),
-  "temperature_indoor": 25.5,        // °C
-  "humidity_indoor": 60.2,           // %
-  "temperature_outdoor": 18.3,       // °C
-  "humidity_outdoor": 75.1,          // %
-  "soil_moisture": 2100,             // 0-4095 (ADC)
-  "tank_level": 1500,                // 0-4095 (ADC)
-  "ph_level": 2200,                  // 0-4095 (ADC)
-  "light_intensity": 1800,           // 0-4095 (ADC)
-  "gas_level": 450,                  // 0-4095 (ADC)
-  "measurement_time": ISODate("2025-12-01T20:30:15Z")
+  "_id": "fceeb9b5-d3e7-47b7-aa93-605351367266",
+  "sensor_id": "temp1",
+  "greenhouse_id": "8357462a-0b08-4d7e-bf7e-46a9ecbaeea7",
+  "type": "temperature",
+  "value": 23.2,
+  "status": "ACTIVE",
+  "measurement_time": ISODate("2025-12-31T21:04:19.453Z")
 }
 ```
 
@@ -485,10 +526,28 @@ Access-Control-Allow-Credentials: true
 
 ```javascript
 {
-  "_id": "Fan1",
-  "name": "Fan1",
-  "state": true,
-  "last_updated": ISODate("2025-12-01T20:35:00Z")
+  "_id": "5bcee084-31b9-4daa-adba-857c0c33802e",
+  "actuator_id": "fan1",
+  "greenhouse_id": "38009b4f-8d1b-45a6-b775-5f1c2c1a8fd5",
+  "type": "fan",
+  "current_state": "ON",
+  "current_value": 1,
+  "last_command": null,
+  "last_update": ISODate("2026-01-04T21:10:27.852Z")
+}
+```
+
+#### Collection: `Greenhouse` (implied from code/dump)
+
+```javascript
+{
+  "_id": "8357462a-0b08-4d7e-bf7e-46a9ecbaeea7",
+  "name": "GH6",
+  "owner_id": "marwen",
+  "mqtt_topic": "GH6",
+  "status": "ACTIVE",
+  "sensors": ["temp1"],
+  "actuators": ["fan1", "led1", "heater1", "pump1"]
 }
 ```
 
@@ -556,6 +615,7 @@ src/test/java/com/greenhouse/
 ├── controllers/
 │   └── managers/
 │       ├── ActuatorManagerTest.java
+│       ├── GreenhouseManagerTest.java
 │       ├── SensorManagerTest.java
 │       └── MqttManagerTest.java
 ```
@@ -674,7 +734,7 @@ org.eclipse.jnosql.level=INFO
 ### Health Check Endpoints
 
 ```http
-GET /smartgreenhouse/rest/sensors/latest
+GET /smartgreenhouse/api/sensors/latest
 ```
 
 If this endpoint responds with 200 OK, the application is functional.
