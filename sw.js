@@ -1,5 +1,5 @@
 // sw.js - Service Worker for PWA
-const CACHE_NAME = 'greenhouse-v1';
+const CACHE_NAME = 'greenhouse-v3';
 const urlsToCache = [
     '/',
     '/index.html',
@@ -47,6 +47,14 @@ self.addEventListener('activate', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+    // Skip Service Worker for API requests to backend
+    // Let them go directly to the server to avoid CORS issues
+    const url = new URL(event.request.url);
+    if (url.hostname === 'localhost' && url.port === '8080') {
+        // This is an API request - don't intercept it
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then((response) => {
@@ -54,7 +62,7 @@ self.addEventListener('fetch', (event) => {
                 return response || fetch(event.request);
             })
             .catch(() => {
-                // Fallback for failed requests
+                // Fallback for failed requests (only for PWA assets)
                 console.log('Service Worker: Fetch failed for', event.request.url);
                 return new Response('Network error or offline', {
                     status: 503,

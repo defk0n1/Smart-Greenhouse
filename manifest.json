@@ -1,13 +1,16 @@
 {
-  "name": "Greenhouse 3D Viewer",
-  "short_name": "Greenhouse3D",
+  "name": "Smart Greenhouse",
+  "short_name": "Smart Greenhouse",
   "description": "Interactive 3D visualization of a greenhouse with sensors",
-  "start_url": "/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#0f172a",
   "orientation": "landscape",
-  "categories": ["education", "productivity"],
+  "categories": [
+    "education",
+    "productivity"
+  ],
   "lang": "en",
   "scope": "/",
   "icons": [

@@ -1,9 +1,11 @@
 // auth.js - Authentication Manager
 import { API_CONFIG } from './config.js';
+import { secureStorage } from './secure-storage.js';
 
 class AuthManager {
     constructor() {
         this.user = null;
+        this.secureStorage = secureStorage; // Initialize secureStorage
         // We don't store the token anymore
         this.checkSession();
     }
@@ -13,37 +15,58 @@ class AuthManager {
      */
     async checkSession() {
         try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.IAM_PATH}/identities/profile`, {
-                credentials: 'include'
-            });
-            if (response.ok) {
-                const profile = await response.json();
-                this.user = {
-                    id: profile.username, // or sub
-                    email: profile.username,
-                    name: profile.username,
-                    roles: JSON.parse(profile.roles || '[]')
-                };
-                console.log('Session valid for user:', this.user.name);
-                return true;
-            } else {
-                console.log('No valid session');
+            // Check for token in secureStorage
+            const token = await this.secureStorage.getItem('access_token');
+
+            if (!token) {
+                console.log('No access token found');
                 this.user = null;
+                return false;
+            }
+
+            // Decode token to get user info (simple decode, no verify)
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+
+                // Check expiration
+                if (payload.exp * 1000 < Date.now()) {
+                    console.log('Token expired');
+                    this.logout();
+                    return false;
+                }
+
+                this.user = {
+                    username: payload.sub,
+                    roles: payload.groups || [] // dependent on your JWT structure
+                };
+
+                console.log('Session valid for user:', this.user.username);
+                return true;
+            } catch (e) {
+                console.error('Invalid token format', e);
+                this.logout();
                 return false;
             }
         } catch (error) {
             console.error('Session check failed:', error);
-            this.user = null;
+            this.logout();
             return false;
         }
     }
 
     /**
-     * Exchange authorization code for cookie
+     * Exchange authorization code for token
      */
     async handleCallback(code, codeVerifier) {
         try {
-            const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.IAM_PATH}/oauth/token`, {
+            console.log('🔄 Starting token exchange...');
+            console.log('  Code:', code ? code.substring(0, 20) + '...' : 'MISSING');
+            console.log('  Code Verifier:', codeVerifier ? codeVerifier.substring(0, 20) + '...' : 'MISSING');
+
+            const tokenUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.IAM_PATH}/oauth/token`;
+            console.log('  Token URL:', tokenUrl);
+
+            const response = await fetch(tokenUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded'
@@ -53,19 +76,38 @@ class AuthManager {
                     code: code,
                     code_verifier: codeVerifier
                 }),
-                credentials: 'include' // Important to receive the cookie
+                credentials: 'include'
             });
+
+            console.log('  Response status:', response.status, response.statusText);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Token exchange failed: ${errorText}`);
+                console.error('❌ Token exchange failed:', errorText);
+                throw new Error(`Token exchange failed (${response.status}): ${errorText}`);
             }
 
-            // We don't get the token in the body anymore, but the cookie is set
-            await this.checkSession();
-            return { success: true };
+            const data = await response.json();
+            console.log('  Response data:', data);
+
+            if (data.access_token) {
+                console.log('✅ Access token received!');
+                await this.secureStorage.setItem('access_token', data.access_token, { encrypt: true });
+                // Also store refresh token if you want to support refresh
+                if (data.refresh_token) {
+                    await this.secureStorage.setItem('refresh_token', data.refresh_token, { encrypt: true });
+                    console.log('✅ Refresh token stored');
+                }
+
+                await this.checkSession();
+                return { success: true };
+            } else {
+                console.error('❌ No access_token in response');
+                throw new Error('No access_token received');
+            }
+
         } catch (error) {
-            console.error('Callback error:', error);
+            console.error('❌ Callback error:', error);
             return { success: false, error: error.message };
         }
     }
@@ -75,29 +117,29 @@ class AuthManager {
      */
     logout() {
         this.user = null;
-        // Ideally call a logout endpoint to clear cookie
-        // For now, we just clear client state
-        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        this.secureStorage.removeItem('access_token');
+        this.secureStorage.removeItem('refresh_token');
+        // document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     }
 
     /**
      * Redirect to IAM login page
      */
-    /**
-     * Redirect to IAM login page
-     */
     async login() {
-        // Get current URL to use as redirect after login
-        const currentUrl = encodeURIComponent(window.location.href);
+        // Always redirect to index.html after login (not welcome.html)
+        // Use root origin to ensure correct path regardless of where login is initiated
+        const redirectUri = `${window.location.origin}/index.html`;
+        const currentUrl = encodeURIComponent(redirectUri);
 
         // Generate OAuth 2.0 PKCE parameters
         const state = Math.random().toString(36).substring(2, 15);
         const codeVerifier = this.generateCodeVerifier();
 
         // Store code_verifier for later use (when handling callback)
-        sessionStorage.setItem('pkce_code_verifier', codeVerifier);
-        sessionStorage.setItem('pkce_state', state);
-        sessionStorage.setItem('redirect_after_login', window.location.href);
+        // CRITICAL FIX: Store in secureStorage (sessionStorage)
+        await this.secureStorage.setItem('pkce_code_verifier', codeVerifier);
+        await this.secureStorage.setItem('pkce_state', state);
+        await this.secureStorage.setItem('redirect_after_login', redirectUri);
 
         // Generate code_challenge using SHA-256
         const codeChallenge = await this.generateCodeChallenge(codeVerifier);
@@ -124,6 +166,7 @@ class AuthManager {
         window.crypto.getRandomValues(array);
         return this.base64UrlEncode(array);
     }
+
 
     /**
      * Generate code challenge from verifier using SHA-256
@@ -158,22 +201,42 @@ class AuthManager {
         return this.user !== null;
     }
 
+
     /**
-     * Get authorization header for API requests
-     */
-    getAuthHeader() {
-        // No header needed, we use cookies
-        return {};
+    * Get authorization header for API requests
+    */
+    async getAccessToken() {
+        return await this.secureStorage.getValidAccessToken();
+    }
+
+    async getAuthHeader() {
+        const token = await this.getAccessToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
     }
 
     /**
      * Make authenticated API request
      */
     async fetchWithAuth(url, options = {}) {
+        const authHeader = await this.getAuthHeader();
+        const headers = {
+            ...options.headers,
+            ...authHeader
+        };
+
         const fetchOptions = {
             ...options,
-            credentials: 'include' // Send cookies
+            headers: headers,
+            // credentials: 'include' // Not needed for Token auth if CORS allows it without credentials, but keep if needed for other cookies
         };
+
+        console.log('📡 fetchWithAuth Request:', url);
+        if (headers['Authorization']) {
+            const t = headers['Authorization'];
+            console.log('   🔑 Auth Header:', t.substring(0, 20) + '...' + (t.length > 20 ? ' (length: ' + t.length + ')' : ''));
+        } else {
+            console.error('   ❌ MISSING AUTH HEADER');
+        }
 
         try {
             const response = await fetch(url, fetchOptions);
@@ -181,6 +244,8 @@ class AuthManager {
             // If unauthorized, try to refresh or logout
             if (response.status === 401) {
                 this.logout();
+                // Optionally redirect to login or throw error
+                // window.location.reload(); 
                 throw new Error('Unauthorized - please login again');
             }
 
@@ -190,6 +255,9 @@ class AuthManager {
             throw error;
         }
     }
+
+    // ... rest of class functions can stay but need to ensure no duplication
+
 }
 
 // Create and export auth manager instance

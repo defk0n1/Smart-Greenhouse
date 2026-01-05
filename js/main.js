@@ -96,8 +96,8 @@ class GreenhouseApp {
         this.raycaster = new THREE.Raycaster();
         this.mouse = new THREE.Vector2();
 
-        // Create sensors
-        this.createSensors();
+        // Sensors (sprites) will be created after they are loaded from API
+        // See mvp.js -> initializeActuatorStates() which calls mainApp.refreshSensors()
 
         // Load GLB model
         this.loadModel();
@@ -447,7 +447,23 @@ class GreenhouseApp {
         this.composer.addPass(outputPass);
     }
 
-    createSensors() {
+    // Refresh sensors after they are loaded from API
+    refreshSensors() {
+        // Clear existing sensor sprites
+        Object.values(this.sensorMeshes).forEach(mesh => {
+            if (mesh.sprite) this.scene.remove(mesh.sprite);
+            if (mesh.glow) this.scene.remove(mesh.glow);
+        });
+        this.sensorMeshes = {};
+
+        // Create new sprites for all loaded sensors
+        if (!mvp.sensors || mvp.sensors.length === 0) {
+            console.warn('No sensors loaded yet, cannot create sprites');
+            return;
+        }
+
+        console.log('Creating sprites for', mvp.sensors.length, 'sensors');
+
         mvp.sensors.forEach(sensor => {
             const colorHex = mvp.toHex(sensor.color);
 
@@ -458,13 +474,13 @@ class GreenhouseApp {
                 transparent: true,
                 opacity: 0.15,
                 depthWrite: false,
-                blending: THREE.AdditiveBlending // Fix for black appearance
+                blending: THREE.AdditiveBlending
             });
             const glow = new THREE.Mesh(glowGeometry, glowMaterial);
             glow.position.set(sensor.position.x, sensor.position.y, sensor.position.z);
             this.scene.add(glow);
 
-            // 2. Create sprite with SVG icon
+            // 2. Create sprite with SVG icon (User request: reverted to SVG)
             this.createSpriteFromSVG(sensor, colorHex);
 
             this.sensorMeshes[sensor.id] = { glow, sensor };
@@ -497,10 +513,15 @@ class GreenhouseApp {
             const y = (canvas.height - scaledHeight) / 2;
 
             // Draw background circle for better visibility
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // Dark semi-transparent background
+            ctx.fillStyle = mvp.toHex(sensor.color) + '99'; // Sensor color with some transparency
             ctx.beginPath();
-            ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, 2 * Math.PI);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 40, 0, 2 * Math.PI); // Larger back circle
             ctx.fill();
+
+            // White border
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
 
             ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
 
@@ -508,13 +529,16 @@ class GreenhouseApp {
             const spriteMaterial = new THREE.SpriteMaterial({
                 map: texture,
                 transparent: true,
-                color: 0xffffff // White icon on dark background
+                color: 0xffffff,
+                depthTest: false, // Ensure visible on top
+                depthWrite: false
             });
 
             const sprite = new THREE.Sprite(spriteMaterial);
             sprite.position.set(sensor.position.x, sensor.position.y, sensor.position.z);
-            sprite.scale.set(0.2, 0.2, 0.2);
+            sprite.scale.set(0.3, 0.3, 0.3); // Consistent scale
             sprite.userData = { sensorId: sensor.id };
+            sprite.renderOrder = 999; // Force render on top
 
             this.scene.add(sprite);
 
@@ -538,30 +562,43 @@ class GreenhouseApp {
 
     createFallbackSprite(sensor) {
         const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
+        canvas.width = 128; // Increased resolution
+        canvas.height = 128;
         const ctx = canvas.getContext('2d');
 
+        // Draw Circle
         ctx.fillStyle = mvp.toHex(sensor.color);
         ctx.beginPath();
-        ctx.arc(32, 32, 16, 0, 2 * Math.PI);
+        ctx.arc(64, 64, 30, 0, 2 * Math.PI); // Radius 30
         ctx.fill();
 
+        // Add minimal border
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Draw Text (ID)
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px Arial';
+        ctx.font = 'bold 20px Arial'; // Larger font
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(sensor.id.substring(0, 3), 32, 32);
+
+        // Use full ID or Name
+        ctx.fillText(sensor.id, 64, 64);
 
         const texture = new THREE.CanvasTexture(canvas);
         const material = new THREE.SpriteMaterial({
             map: texture,
-            transparent: true
+            transparent: true,
+            depthTest: false, // Ensure visible on top
+            depthWrite: false
         });
+
         const sprite = new THREE.Sprite(material);
         sprite.position.set(sensor.position.x, sensor.position.y, sensor.position.z);
-        sprite.scale.set(0.15, 0.15, 0.15);
+        sprite.scale.set(0.3, 0.3, 0.3); // Slightly larger scale in 3D
         sprite.userData = { sensorId: sensor.id };
+        sprite.renderOrder = 999; // Force render on top
 
         this.scene.add(sprite);
 
@@ -687,9 +724,9 @@ class GreenhouseApp {
 
                 // Display user name after model loads and controls are visible
                 setTimeout(() => {
-                    if (authManager.user && authManager.user.name) {
-                        document.getElementById('userName').textContent = `Hi, ${authManager.user.name}!`;
-                        console.log('User name displayed:', authManager.user.name);
+                    if (authManager.user && authManager.user.username) {
+                        document.getElementById('userName').textContent = `Hi, ${authManager.user.username}!`;
+                        console.log('User name displayed:', authManager.user.username);
                     } else {
                         console.warn('No user data available to display');
                     }
@@ -826,17 +863,57 @@ class GreenhouseApp {
     }
 
     updateSensorVisuals() {
-        const actuatorIds = ['lamp1', 'lamp2', 'fan1', 'fan2', 'pump'];
+        // Helper to check if a device is an actuator (check existence in actuatorStates)
+        const isActuator = (id) => !!mvp.actuatorStates[id];
 
-        // Check each sensor against its thresholds
+        // Helper to check if a sensor OR actuator has valid data
+        const hasData = (id) => {
+            if (isActuator(id)) {
+                return true; // Actuators configured via API are always "present"
+            }
+            // For sensors, check if we have an entry in sensorValues
+            // We check for the object itself, not specifically '.data' which might be missing on some mocks
+            return !!mvp.sensorValues[id];
+        };
+
+        // Determine priority visibility BEFORE loop
+        // Rule: If we have both int and ext, only show int.
+        const showTempExt = hasData('temp_ext') && !hasData('temp_int');
+        const showHumExt = hasData('humidity_ext') && !hasData('humidity_int');
+
+        // Check each sensor/actuator against its thresholds/state and update visibility
         mvp.sensors.forEach(sensor => {
-            // Skip actuators as they are handled by updateActuatorVisuals
-            if (actuatorIds.includes(sensor.id)) return;
-
             const meshData = this.sensorMeshes[sensor.id];
-            if (!meshData || !meshData.sprite) return;
+            if (!meshData) return;
 
+            // 1. VISIBILITY CHECK
+            // Check if sensor/actuator has data in either sensorValues or actuatorStates
+            if (!hasData(sensor.id)) {
+                // No data, hide the sensor mesh/sprite
+                if (meshData.sprite) meshData.sprite.visible = false;
+                if (meshData.glow) meshData.glow.visible = false;
+                return;
+            }
+
+            // Apply "Interior Priority" Rule
+            let shouldShow = true;
+            if (sensor.id === 'temp_ext' && !showTempExt) shouldShow = false;
+            if (sensor.id === 'humidity_ext' && !showHumExt) shouldShow = false;
+
+            if (!shouldShow) {
+                if (meshData.sprite) meshData.sprite.visible = false;
+                if (meshData.glow) meshData.glow.visible = false;
+                return;
+            }
+
+            // Show the sensor if it was hidden
+            if (meshData.sprite) meshData.sprite.visible = true;
+            if (meshData.glow) meshData.glow.visible = true;
+
+            // 2. ALERT COLOR UPDATE
             const sensorData = mvp.sensorValues[sensor.id];
+
+            // Skip alert color logic if no sensor data (e.g. absent or is actuator)
             if (!sensorData) return;
 
             const value = sensorData.current;
@@ -883,21 +960,61 @@ class GreenhouseApp {
         actuatorIds.forEach(id => {
             const meshData = this.sensorMeshes[id];
             if (!meshData) {
-                console.warn(`No mesh data for ${id}`);
+                // Device not in 3D scene, skip silently
                 return;
             }
 
             const sensorData = mvp.sensorValues[id];
             if (!sensorData || !sensorData.data) {
-                console.warn(`No sensor data for ${id}`, sensorData);
+                // Device exists in 3D scene but no data from API yet (or not installed), skip silently
+                // Disable effects if no data
+                if (meshData.light) meshData.light.intensity = 0;
+                if (meshData.glow) meshData.glow.material.opacity = 0;
                 return;
             }
 
             // Get actuator state
             const isOn = sensorData.data.state === 'ON' || sensorData.data.lastCommand === 'ON';
-            console.log(`Actuator ${id}: isOn=${isOn}, state=${sensorData.data.state}, lastCommand=${sensorData.data.lastCommand}`);
+            // console.log(`Actuator ${id}: isOn=${isOn}`); // Removed verbose logging
 
             // Special handling for bulbs (lamps)
+            if (id.includes('lamp')) {
+                // Update light intensity
+                if (meshData.light) {
+                    const targetIntensity = isOn ? 2 : 0;
+                    meshData.light.intensity += (targetIntensity - meshData.light.intensity) * 0.1;
+                }
+
+                // Update glow opacity
+                if (meshData.glow) {
+                    const targetOpacity = isOn ? 0.8 : 0.1;
+                    meshData.glow.material.opacity += (targetOpacity - meshData.glow.material.opacity) * 0.1;
+                }
+
+                // Update sprite color
+                if (meshData.sprite) {
+                    const color = isOn ? 0xFFA500 : 0x888888;
+                    meshData.sprite.material.color.setHex(color);
+                }
+            }
+            // Special handling for fans
+            else if (id.includes('fan')) {
+                // Rotate fans if ON
+                if (isOn && meshData.object) {
+                    // Find the blades (usually a child object) or rotate the whole group if simple model
+                    // For now, assuming we rotate the whole object or a specific part if identified
+                    const rotationSpeed = 0.2;
+                    // Rotate around local Y axis (or appropriate axis for fan model)
+                    if (meshData.blades) {
+                        meshData.blades.rotation.z += rotationSpeed;
+                    } else {
+                        // Fallback: rotate the whole marker/icon slightly to show activity? 
+                        // Or maybe just rotate the glow/sprite?
+                        // For sprites, rotation might look weird.
+                        // Ideally we'd have a 3D model path like `meshData.object.children[0]`
+                    }
+                }
+            }
             if (id === 'lamp1' || id === 'lamp2') {
                 // Change glow color and intensity
                 if (isOn) {
@@ -1009,10 +1126,15 @@ class GreenhouseApp {
     }
 }
 
-// Initialize application when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize application when page loads or if already loaded (dynamic import)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        window.mainApp = new GreenhouseApp();
+    });
+} else {
+    // DOM already loaded
     window.mainApp = new GreenhouseApp();
-});
+}
 
 // Export for module use
 export { GreenhouseApp };

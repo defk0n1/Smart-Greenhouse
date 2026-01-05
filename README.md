@@ -23,6 +23,14 @@ The **PWA** (Progressive Web Application) is the frontend interface for the Smar
 - 🏰 **3D Greenhouse Visualization**: Interactive Three.js 3D model
 - 📊 **Real-time Sensor Monitoring**: Live data with gauges and charts
 - 🎛️ **Actuator Control**: Manual control of fans, lights, and pump
+
+### Screenshots
+![Greenhouse Dashboard](images/greenhouse_example_1.png)
+*3D Visualization and Control Interface*
+
+![Monitoring View](images/greenhouse_example_2.png)
+*Real-time Sensor Data Monitoring*
+
 - 🔐 **Secure Authentication**: OAuth2 integration with IAM module
 - 📱 **Progressive Web App**: Installable, offline-capable application
 
@@ -32,7 +40,7 @@ The **PWA** (Progressive Web Application) is the frontend interface for the Smar
 - ✅ Real-time sensor data visualization with gauges
 - ✅ Historical data charts with Chart.js
 - ✅ Manual actuator control (ON/OFF toggles)
-- ✅ OAuth2 authentication flow integration
+- ✅ OAuth2 authentication with **PKCE** security
 - ✅ Service Worker for offline functionality
 - ✅ Responsive design with glassmorphism UI
 
@@ -63,9 +71,7 @@ pwa/Smart-Greenhouse/
 └── server.py              # Development server (Python)
 ```
 
-### Architecture Diagram
 
-![PWA Architecture](images/pwa_architecture.png)
 
 ---
 
@@ -120,7 +126,8 @@ pwa/Smart-Greenhouse/
 
 ### 5. Authentication
 
-- **OAuth2 Flow**: Standard Authorization Code Flow
+- **OAuth2 Flow**: Authorization Code Flow with **PKCE** (Proof Key for Code Exchange)
+- **Security**: SHA-256 code challenge generation for enhanced security
 - **IAM Integration**: Seamless integration with IAM module  
 - **Secure Cookies**: HttpOnly cookies for JWT storage
 - **Auto-redirect**: Automatic login redirection
@@ -167,7 +174,7 @@ pwa/Smart-Greenhouse/
 |------------|-------------|
 | **OAuth2** | Authorization Code Flow |
 | **JWT** | JSON Web Tokens in HttpOnly cookies |
-| **PKCE** | Proof Key for Code Exchange (optional) |
+| **PKCE** | **SHA-256** Code Challenge (Mandatory) |
 
 ---
 
@@ -185,7 +192,8 @@ pwa/Smart-Greenhouse/
 #### 1. Clone the Project
 
 ```bash
-cd "c:\Users\marwe\Desktop\Nouveau dossier (4)\pwa\Smart-Greenhouse"
+git clone https://github.com/defk0n1/Smart-Greenhouse.git
+cd smart-greenhouse/pwa/Smart-Greenhouse
 ```
 
 #### 2. Configuration
@@ -194,8 +202,10 @@ Edit `js/config.js`:
 
 ```javascript
 export const API_CONFIG = {
-    // API Base URL
-    BASE_URL: 'http://localhost:8080/smartgreenhouse/rest',
+    // Backend URLs
+    BASE_URL: window.location.hostname === 'localhost'
+        ? 'http://localhost:8080'
+        : window.location.origin,
     
     // IAM Authentication
     IAM_BASE_URL: 'http://localhost:8080/iam-1.0/rest-iam',

@@ -1,296 +1,280 @@
 // mvp.js - Data management and business logic
 import { API_CONFIG } from './config.js';
 import { authManager } from './auth.js';
+import { greenhouseManager } from './greenhouse.js';
 
 class GreenhousePresenter {
     constructor() {
-        this.sensors = [
-            {
-                id: 'temp_int',
-                name: 'Internal Temperature',
-                svg: 'thermometer',
-                color: 0xff6b6b,
-                position: { x: -0.5, y: 0.5, z: 0.5 },
-                unit: '°C',
-                min: 0,
-                max: 50,
-                warningHigh: 30,  // Above this = warning (orange)
-                criticalHigh: 35  // Above this = critical (red)
-            },
-            {
-                id: 'temp_ext',
-                name: 'External Temperature',
-                svg: 'thermometer',
-                color: 0x4ecdc4,
-                position: { x: -0.1, y: 0.7, z: 0.0 },
-                unit: '°C',
-                min: -10,
-                max: 50,
-                warningLow: 0,    // Below this = warning
-                warningHigh: 35,
-                criticalHigh: 40
-            },
-            {
-                id: 'humidity_int',
-                name: 'Internal Humidity',
-                svg: 'droplet',
-                color: 0x95e1d3,
-                position: { x: 0.5, y: 0.5, z: -0.5 },
-                unit: '%',
-                min: 0,
-                max: 100,
-                warningLow: 30,   // Below 30% = too dry
-                warningHigh: 80,  // Above 80% = too humid
-                criticalHigh: 90
-            },
-            {
-                id: 'humidity_ext',
-                name: 'External Humidity',
-                svg: 'droplet',
-                color: 0x38ada9,
-                position: { x: 0.7, y: 0.6, z: 0.2 },
-                unit: '%',
-                min: 0,
-                max: 100,
-                warningHigh: 85,
-                criticalHigh: 95
-            },
-            {
-                id: 'soil',
-                name: 'Soil Moisture',
-                svg: 'droplet',
-                color: 0xf9ca24,
-                position: { x: 0.0, y: 0.3, z: 0.0 },
-                unit: '%',
-                min: 0,
-                max: 100,
-                warningLow: 20,   // Below 20% = needs water
-                criticalLow: 10
-            },
-            {
-                id: 'light',
-                name: 'Light Sensor',
-                svg: 'sun',
-                color: 0xffd93d,
-                position: { x: -0.3, y: 0.3, z: 0.8 },
-                unit: 'lux',
-                min: 0,
-                max: 100000
-            },
-            {
-                id: 'gas',
-                name: 'Gas Sensor',
-                svg: 'wind',
-                color: 0xa8e6cf,
-                position: { x: 0.0, y: 0.3, z: 1.0 },
-                unit: 'ppm',
-                min: 0,
-                max: 5000,
-                warningHigh: 1000,  // Above 1000 ppm = warning
-                criticalHigh: 2000  // Above 2000 ppm = danger!
-            },
-            {
-                id: 'water',
-                name: 'Water Tank Level',
-                svg: 'droplet',
-                color: 0x74b9ff,
-                position: { x: -0.8, y: 0.4, z: -0.3 },
-                unit: '%',
-                min: 0,
-                max: 100,
-                warningLow: 20,   // Below 20% = refill soon
-                criticalLow: 10   // Below 10% = critical!
-            },
-            {
-                id: 'ph',
-                name: 'Soil pH',
-                svg: 'flask',
-                color: 0xdda15e,
-                position: { x: -0.4, y: 0.3, z: 0.0 },
-                unit: 'pH',
-                min: 0,
-                max: 14
-            },
-            {
-                id: 'pressure',
-                name: 'Atmospheric Pressure',
-                svg: 'gauge',
-                color: 0xbc6c25,
-                position: { x: 0.0, y: 0.8, z: 1.0 },
-                unit: 'hPa',
-                min: 950,
-                max: 1050
-            },
-            {
-                id: 'fan1',
-                name: 'Fan 1',
-                svg: 'fan',
-                color: 0x00d2ff,
-                position: { x: -0.4, y: 0.6, z: -0.8 },
-                unit: 'RPM',
-                min: 0,
-                max: 3000
-            },
-            {
-                id: 'fan2',
-                name: 'Fan 2',
-                svg: 'fan',
-                color: 0x00aeff,
-                position: { x: 0.4, y: 0.4, z: 0.8 },
-                unit: 'RPM',
-                min: 0,
-                max: 3000
-            },
-            {
-                id: 'pump',
-                name: 'Water Pump',
-                svg: 'pump',
-                color: 0x5f27cd,
-                position: { x: 0.7, y: 0.3, z: 1.0 },
-                unit: 'L/h',
-                min: 0,
-                max: 1000
-            },
-            {
-                id: 'lamp1',
-                name: 'LED Lamp 1',
-                svg: 'lightbulb',
-                color: 0xfeca57,
-                position: { x: 0.0, y: 0.5, z: -0.8 },
-                unit: 'W',
-                min: 0,
-                max: 100
-            },
-            {
-                id: 'lamp2',
-                name: 'LED Lamp 2',
-                svg: 'lightbulb',
-                color: 0xffb142,
-                position: { x: 0.0, y: 0.5, z: 0.8 },
-                unit: 'W',
-                min: 0,
-                max: 100
-            }
+        // Template for sensor/actuator default properties
+        this.sensorTemplates = {
+            temperature: { svg: 'thermometer', color: 0xff6b6b, unit: '°C', min: 0, max: 50, warningHigh: 30, criticalHigh: 35 },
+            humidity: { svg: 'droplet', color: 0x95e1d3, unit: '%', min: 0, max: 100, warningLow: 30, warningHigh: 80, criticalHigh: 90 },
+            soil_moisture: { svg: 'droplet', color: 0xf9ca24, unit: '%', min: 0, max: 100, warningLow: 20, criticalLow: 10 },
+            light: { svg: 'sun', color: 0xffd93d, unit: '%', min: 0, max: 100 },
+            water_level: { svg: 'droplet', color: 0x74b9ff, unit: '%', min: 0, max: 100, warningLow: 20, criticalLow: 10 },
+            pump: { svg: 'pump', color: 0x5f27cd, unit: '', min: 0, max: 1, isActuator: true },
+            fan: { svg: 'fan', color: 0x00d2ff, unit: '', min: 0, max: 1, isActuator: true },
+            led: { svg: 'led', color: 0xfeca57, unit: '', min: 0, max: 1, isActuator: true },
+            heater: { svg: 'heater', color: 0xff6348, unit: '', min: 0, max: 1, isActuator: true }
+        };
+
+        // Default positions (will be overridden if we have many sensors)
+        this.defaultPositions = [
+            { x: -0.5, y: 0.5, z: 0.5 },
+            { x: 0.5, y: 0.5, z: -0.5 },
+            { x: 0.0, y: 0.3, z: 0.0 },
+            { x: -0.3, y: 0.3, z: 0.8 },
+            { x: -0.8, y: 0.4, z: -0.3 },
+            { x: 0.7, y: 0.3, z: 1.0 },
+            { x: -0.4, y: 0.6, z: -0.8 },
+            { x: 0.0, y: 0.5, z: -0.8 },
+            { x: 0.0, y: 0.5, z: 0.8 }
         ];
 
+        // Dynamic sensors array - populated from API
+        this.sensors = [];
+
         this.sensorValues = {};
+        this.actuatorStates = {};
         this.currentSensor = null;
         this.sensorChart = null;
         this.deferredPrompt = null;
         this.gaugeCanvases = {}; // Store gauge canvas contexts
+        this.gaugeUpdateInterval = null;
 
-        this.initializeSensorValues();
-        this.initializeActuatorStates();
-        this.initGauges();
+        // Note: initGauges() is called after sensors are loaded from API
         this.initPWA();
     }
 
 
     async initializeSensorValues() {
-        // Try to fetch real sensor data from API
+        // Try to fetch sensor data specific to this greenhouse from API
         try {
-            const response = await fetch(API_CONFIG.SENSORS_URL, { credentials: 'include' });
+            const greenhouseId = greenhouseManager.getCurrentGreenhouseId();
+
+            if (!greenhouseId) {
+                console.warn('⚠️  No greenhouse selected, cannot fetch sensors');
+                return;
+            }
+
+            // Clear old sensor data and sensors array
+            this.sensorValues = {};
+            this.sensors = [];
+
+            // Use the new endpoint: GET /greenhouses/{id}/sensors
+            const url = `${API_CONFIG.SMART_GREENHOUSE_API_URL}/greenhouses/${greenhouseId}/sensors`;
+
+            const response = await authManager.fetchWithAuth(url);
 
             if (response.ok) {
-                const sensors = await response.json();
-                console.log('✓ Loaded sensor data from API:', sensors);
+                const apiSensors = await response.json();
+                console.log('✓ Loaded sensor data for greenhouse', greenhouseId, ':', apiSensors);
 
-                // Map API sensor data to our sensor values
-                sensors.forEach(apiSensor => {
+                // Create sensors dynamically from API response
+                let positionIndex = 0;
+                apiSensors.forEach(apiSensor => {
                     // Normalize API data fields
-                    const sensorId = apiSensor.id || apiSensor._id;
-                    const apiSensorId = apiSensor.sensor_id || apiSensor.sensorId || '';
-                    const sensorType = apiSensor.type || '';
+                    const apiId = apiSensor.id || apiSensor._id;
+                    const sensorId = apiSensor.sensor_id || apiSensor.sensorId || apiId;
+                    const sensorType = apiSensor.type || this.guessSensorType(sensorId);
                     const sensorValue = apiSensor.value !== undefined ? apiSensor.value : (apiSensor.measurement !== undefined ? apiSensor.measurement : 0);
                     const sensorTime = apiSensor.measurementTime || apiSensor.measurement_time || new Date();
 
-                    // Find matching sensor in our predefined sensors list
-                    // Priority: sensorId match (e.g., "temp_int_001" contains "temp_int") > Type exact match
-                    let matchingSensor = this.sensors.find(s => {
-                        // Check if apiSensorId contains the local sensor id
-                        // e.g., "temp_int_001" contains "temp_int"
-                        return apiSensorId.includes(s.id) || s.id.includes(apiSensorId);
-                    });
+                    // Get template based on type
+                    const template = this.sensorTemplates[sensorType] || { svg: 'gauge', color: 0xaaaaaa, unit: '', min: 0, max: 100 };
 
-                    if (!matchingSensor && sensorType) {
-                        // Fallback: Try exact type match
-                        matchingSensor = this.sensors.find(s => s.id === sensorType);
-                    }
+                    // Create sensor object using API ID
+                    const sensor = {
+                        id: sensorId,  // Use ID from API
+                        name: apiSensor.name || this.formatSensorName(sensorId),
+                        svg: template.svg,
+                        color: template.color,
+                        position: this.defaultPositions[positionIndex % this.defaultPositions.length],
+                        unit: template.unit,
+                        min: template.min,
+                        max: template.max,
+                        warningLow: template.warningLow,
+                        warningHigh: template.warningHigh,
+                        criticalLow: template.criticalLow,
+                        criticalHigh: template.criticalHigh,
+                        isActuator: false
+                    };
 
-                    if (matchingSensor) {
-                        console.log(`Matched API sensor ${sensorId} (${apiSensorId}, ${sensorType}) to local sensor ${matchingSensor.id}`);
-                        this.sensorValues[matchingSensor.id] = {
-                            current: sensorValue,
-                            unit: matchingSensor.unit,
-                            lastUpdate: new Date(sensorTime),
-                            battery: apiSensor.battery || 100,
-                            status: apiSensor.status || 'active',
-                            data: apiSensor // Keep original API data
-                        };
-                    } else {
-                        console.log(`No local match found for API sensor ${sensorId} (${apiSensorId}, ${sensorType})`);
-                    }
+                    this.sensors.push(sensor);
+                    console.log(`✓ Created sensor: ${sensor.id} (${sensor.name})`);
+
+                    // Initialize sensor value
+                    this.sensorValues[sensorId] = {
+                        current: sensorValue,
+                        unit: sensor.unit,
+                        lastUpdate: new Date(sensorTime),
+                        battery: apiSensor.battery || 100,
+                        status: apiSensor.status || 'active',
+                        data: apiSensor // Keep original API data
+                    };
+
+                    positionIndex++;
                 });
-
-                // Fill in missing sensors with default data (0)
-                this.fillMissingSensorsWithMockData();
 
                 // Start periodic updates
                 this.startSensorUpdates();
+
+                // Now load actuators
+                await this.initializeActuatorStates();
             } else {
                 throw new Error(`API returned ${response.status}`);
             }
         } catch (error) {
             console.warn('⚠ Could not fetch sensor data from API:', error.message);
-            // Always initialize missing sensors with default values (0) to prevent UI crashes
-            this.fillMissingSensorsWithMockData();
         }
     }
 
+    guessSensorType(sensorId) {
+        const id = sensorId.toLowerCase();
+        if (id.includes('temp')) return 'temperature';
+        if (id.includes('hum')) return 'humidity';
+        if (id.includes('soil') || id.includes('moisture')) return 'soil_moisture';
+        if (id.includes('light')) return 'light';
+        if (id.includes('water')) return 'water_level';
+        return 'unknown';
+    }
+
+    guessActuatorType(actuatorId) {
+        const id = actuatorId.toLowerCase();
+        if (id.includes('led') || id.includes('lamp') || id.includes('light')) return 'led';
+        if (id.includes('heater')) return 'heater';
+        if (id.includes('fan') || id.includes('vent')) return 'fan';
+        if (id.includes('pump') || id.includes('water')) return 'pump';
+        return 'unknown';
+    }
+
+    formatSensorName(sensorId) {
+        // Convert 'temp1' to 'Temperature 1', 'hum1' to 'Humidity 1', etc.
+        return sensorId
+            .replace(/temp/i, 'Température')
+            .replace(/hum/i, 'Humidité')
+            .replace(/soil/i, 'Sol')
+            .replace(/light/i, 'Lumière')
+            .replace(/water/i, 'Eau')
+            .replace(/(\d+)/, ' $1');
+    }
     fillMissingSensorsWithMockData() {
-        this.sensors.forEach(sensor => {
-            if (!this.sensorValues[sensor.id]) {
-                // Initialize with default values (0) instead of random data
-                this.sensorValues[sensor.id] = {
-                    current: 0,
-                    unit: sensor.unit,
-                    lastUpdate: new Date(),
-                    battery: 0,
-                    status: 'No Data'
-                };
-            }
-        });
+        // Mock data generation disabled to prevent ghost sensors
     }
 
     async initializeActuatorStates() {
-        const actuatorIds = ['fan1', 'fan2', 'pump', 'lamp1', 'lamp2'];
+        try {
+            const greenhouseId = greenhouseManager.getCurrentGreenhouseId();
 
-        for (const id of actuatorIds) {
-            try {
-                const state = await this.fetchActuatorState(id);
+            if (!greenhouseId) {
+                console.warn('⚠️  No greenhouse selected, cannot fetch actuators');
+                return;
+            }
 
-                // Store actuator state in sensorValues
-                if (!this.sensorValues[id]) {
-                    this.sensorValues[id] = {
-                        current: 0,
+            // Clear old actuator data
+            this.actuatorStates = {};
+
+            // Use the new endpoint: GET /greenhouses/{id}/actuators
+            const url = `${API_CONFIG.SMART_GREENHOUSE_API_URL}/greenhouses/${greenhouseId}/actuators`;
+
+            const response = await authManager.fetchWithAuth(url);
+            if (!response.ok) {
+                console.warn('Could not fetch actuators list, status:', response.status);
+                return;
+            }
+
+            const apiActuators = await response.json();
+            console.log('✓ Loaded actuators for greenhouse', greenhouseId, ':', apiActuators);
+
+            let positionIndex = this.sensors.length; // Continue from where sensors left off
+
+            for (const actuator of apiActuators) {
+                const actuatorId = actuator.actuator_id || actuator.actuatorId || actuator.id;
+                const actuatorType = actuator.type || this.guessActuatorType(actuatorId);
+
+                try {
+                    // Fetch state
+                    const state = actuator.state || actuator.lastCommand || await this.fetchActuatorState(actuatorId);
+
+                    // Get template based on type
+                    const template = this.sensorTemplates[actuatorType] || { svg: 'gauge', color: 0xaaaaaa, unit: '', min: 0, max: 1, isActuator: true };
+
+                    // Create actuator sensor object
+                    const actuatorSensor = {
+                        id: actuatorId,  // Use ID from API
+                        name: actuator.name || this.formatActuatorName(actuatorId),
+                        svg: template.svg,
+                        color: template.color,
+                        position: this.defaultPositions[positionIndex % this.defaultPositions.length],
+                        unit: template.unit,
+                        min: template.min,
+                        max: template.max,
+                        isActuator: true
+                    };
+
+                    this.sensors.push(actuatorSensor);
+                    console.log(`✓ Created actuator: ${actuatorSensor.id} (${actuatorSensor.name})`);
+
+                    // Add to actuatorStates
+                    this.actuatorStates[actuatorId] = {
+                        present: true,
+                        state: state,
+                        value: state === 'ON' ? 1 : 0,
+                        lastUpdate: new Date(),
+                        unit: '',
+                        battery: 100,
+                        status: 'active',
+                        data: {
+                            state: state,
+                            lastCommand: state
+                        }
+                    };
+
+                    // Also add to sensorValues for unified access
+                    this.sensorValues[actuatorId] = {
+                        current: state === 'ON' ? 1 : 0,
                         unit: '',
                         lastUpdate: new Date(),
                         battery: 100,
                         status: 'active'
                     };
+
+                    positionIndex++;
+                } catch (error) {
+                    console.error(`Error initializing actuator ${actuatorId}:`, error);
                 }
-
-                // Store actuator data with state
-                this.sensorValues[id].data = {
-                    state: state,
-                    lastCommand: state
-                };
-
-                console.log(`Initialized actuator ${id} with state: ${state}`);
-            } catch (error) {
-                console.error(`Error initializing actuator ${id}:`, error);
             }
+
+            // Update gauges after loading all sensors and actuators
+            this.initGauges();
+            this.updateGauges();
+
+            // Refresh 3D sprites now that sensors are loaded
+            if (window.mainApp) {
+                window.mainApp.refreshSensors();
+            }
+        } catch (error) {
+            console.error('Error initializing actuators:', error);
         }
+    }
+
+    guessActuatorType(actuatorId) {
+        const id = actuatorId.toLowerCase();
+        if (id.includes('pump')) return 'pump';
+        if (id.includes('fan')) return 'fan';
+        if (id.includes('led') || id.includes('light') || id.includes('lamp')) return 'led';
+        if (id.includes('heat')) return 'heater';
+        return 'unknown';
+    }
+
+    formatActuatorName(actuatorId) {
+        // Convert 'pump1' to 'Pompe 1', 'fan1' to 'Ventilateur 1', etc.
+        return actuatorId
+            .replace(/pump/i, 'Pompe')
+            .replace(/fan/i, 'Ventilateur')
+            .replace(/led/i, 'LED')
+            .replace(/heater/i, 'Chauffage')
+            .replace(/(\d+)/, ' $1');
     }
 
     startSensorUpdates() {
@@ -301,7 +285,17 @@ class GreenhousePresenter {
 
         this.updateInterval = setInterval(async () => {
             try {
-                const response = await fetch(API_CONFIG.SENSORS_URL, { credentials: 'include' });
+                const greenhouseId = greenhouseManager.getCurrentGreenhouseId();
+
+                if (!greenhouseId) {
+                    console.warn('⚠️  No greenhouse selected, skipping sensor update');
+                    return;
+                }
+
+                // Use the correct greenhouse-specific endpoint
+                const url = `${API_CONFIG.SMART_GREENHOUSE_API_URL}/greenhouses/${greenhouseId}/sensors`;
+
+                const response = await authManager.fetchWithAuth(url);
                 if (response.ok) {
                     const sensors = await response.json();
 
@@ -313,10 +307,17 @@ class GreenhousePresenter {
                         const sensorValue = apiSensor.value !== undefined ? apiSensor.value : (apiSensor.measurement !== undefined ? apiSensor.measurement : 0);
                         const sensorTime = apiSensor.measurementTime || apiSensor.measurement_time || new Date();
 
-                        let matchingSensor = this.sensors.find(s => {
-                            return apiSensorId.includes(s.id) || s.id.includes(apiSensorId);
-                        });
+                        // Try direct ID match first (e.g., temp1 === temp1)
+                        let matchingSensor = this.sensors.find(s => s.id === apiSensorId);
 
+                        // Fallback: fuzzy matching
+                        if (!matchingSensor) {
+                            matchingSensor = this.sensors.find(s => {
+                                return apiSensorId.includes(s.id) || s.id.includes(apiSensorId);
+                            });
+                        }
+
+                        // Fallback: type-based matching
                         if (!matchingSensor && sensorType) {
                             matchingSensor = this.sensors.find(s => s.id === sensorType);
                         }
@@ -346,60 +347,93 @@ class GreenhousePresenter {
 
     // Initialize Gauges
     initGauges() {
-        // Define which sensors to display on each gauge panel
-        const leftGauges = [
-            { canvasId: 'gaugeTemp', sensorId: 'temp_int' },
-            { canvasId: 'gaugeHumidity', sensorId: 'humidity_int' },
-            { canvasId: 'gaugeSoil', sensorId: 'soil' }
+        // Gauges will be populated after sensors are loaded from API
+        // This is now called after initializeSensorValues completes
+
+        if (this.sensors.length === 0) {
+            console.warn('No sensors loaded yet, gauges will be empty');
+            return;
+        }
+
+        // Use first 6 sensors/actuators for the 6 gauge slots
+        const gaugeSlots = [
+            { canvasId: 'gaugeTemp' },
+            { canvasId: 'gaugeHumidity' },
+            { canvasId: 'gaugeSoil' },
+            { canvasId: 'gaugeGas' },
+            { canvasId: 'gaugeWater' },
+            { canvasId: 'gaugePH' }
         ];
 
-        const rightGauges = [
-            { canvasId: 'gaugeGas', sensorId: 'gas' },
-            { canvasId: 'gaugeWater', sensorId: 'water' },
-            { canvasId: 'gaugePH', sensorId: 'ph' }
-        ];
+        for (let i = 0; i < gaugeSlots.length && i < this.sensors.length; i++) {
+            const { canvasId } = gaugeSlots[i];
+            const sensor = this.sensors[i];
 
-        // Initialize all gauges
-        [...leftGauges, ...rightGauges].forEach(({ canvasId, sensorId }) => {
             const canvas = document.getElementById(canvasId);
             if (canvas) {
                 const ctx = canvas.getContext('2d');
-                this.gaugeCanvases[canvasId] = { ctx, sensorId };
+                this.gaugeCanvases[canvasId] = { ctx, sensorId: sensor.id };
 
                 // Initial draw
-                this.drawGauge(canvas, ctx, sensorId);
+                this.drawGauge(canvas, ctx, sensor.id);
 
                 // Add click event to open sensor popup
                 canvas.addEventListener('click', () => {
-                    const sensor = this.sensors.find(s => s.id === sensorId);
-                    if (sensor) {
-                        this.showSensorPopup(sensor);
-                    }
+                    this.showSensorPopup(sensor);
                 });
             }
-        });
+        }
 
         // Update gauges periodically (synchronized with sensor updates)
-        setInterval(() => {
-            this.updateGauges();
-        }, 1000);
+        if (!this.gaugeUpdateInterval) {
+            this.gaugeUpdateInterval = setInterval(() => {
+                this.updateGauges();
+            }, 1000);
+        }
     }
 
     // Draw a circular gauge
     drawGauge(canvas, ctx, sensorId) {
-        const sensor = this.sensors.find(s => s.id === sensorId);
-        if (!sensor) return;
+        // Always clear canvas first to prevent stale data
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        const sensor = this.sensors.find(s => s.id === sensorId);
+
+        // If sensor doesn't exist or has no data, show "No Data" or blank
         const sensorData = this.sensorValues[sensorId];
-        if (!sensorData) return;
+        if (!sensor || !sensorData) {
+            // Draw placeholder/empty state
+            const centerX = canvas.width / 2;
+            const centerY = 90;
+            const radius = 60;
+
+            // Draw faint background circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0.75 * Math.PI, 2.25 * Math.PI);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 12;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Text "No Data"
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.font = '14px -apple-system, BlinkMacSystemFont, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Waiting...', centerX, centerY);
+
+            // Draw label if possible (from ID guess)
+            if (sensorId) {
+                ctx.font = 'bold 12px -apple-system, BlinkMacSystemFont, sans-serif';
+                ctx.fillText(sensorId.toUpperCase(), centerX, centerY + radius + 18);
+            }
+            return;
+        }
 
         const centerX = canvas.width / 2;
         const centerY = 90; // Position fixed for better text placement
         const radius = 60;
         const lineWidth = 12;
-
-        // Clear canvas
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Calculate gauge properties
         const value = sensorData.current;
@@ -463,7 +497,7 @@ class GreenhousePresenter {
         ctx.textBaseline = 'top';
 
         // Split long names into multiple lines
-        const name = sensor.name;
+        const name = sensor.id;
         const words = name.split(' ');
         if (words.length > 2) {
             ctx.fillText(words.slice(0, 2).join(' '), centerX, centerY + radius + 18);
@@ -487,15 +521,67 @@ class GreenhousePresenter {
     }
 
     // Update all gauges
+    // Update all gauges - Dynamic Generation
     updateGauges() {
-        Object.entries(this.gaugeCanvases).forEach(([canvasId, { ctx, sensorId }]) => {
-            const canvas = document.getElementById(canvasId);
-            if (canvas && ctx) {
-                this.drawGauge(canvas, ctx, sensorId);
+        const leftPanel = document.getElementById('gaugesLeft');
+        const rightPanel = document.getElementById('gaugesRight');
+
+        if (!leftPanel || !rightPanel) return;
+
+        // User request: "les gauges soient utiliser seulement pour les capteurs et non pas les actuateurs"
+        // So we filter for gauges ONLY. 
+        // Note: this.sensors still contains everything for the 3D view (sprites).
+        const sensorsForGauges = this.sensors.filter(s => !s.isActuator);
+
+        // Iterate through sensors meant for gauges
+        sensorsForGauges.forEach((sensor, index) => {
+            const canvasId = `gauge_${sensor.id}`;
+            let canvas = document.getElementById(canvasId);
+
+            if (!canvas) {
+                // Create new canvas if it doesn't exist
+                canvas = document.createElement('canvas');
+                canvas.id = canvasId;
+                canvas.className = 'gauge-canvas';
+                canvas.width = 180;
+                canvas.height = 200;
+
+                // Add click listener for popup
+                canvas.addEventListener('click', () => {
+                    this.showSensorPopup(sensor);
+                });
+
+                // append to panels alternately or based on index
+                if (index % 2 === 0) {
+                    leftPanel.appendChild(canvas);
+                } else {
+                    rightPanel.appendChild(canvas);
+                }
+            }
+
+            // Get or create context
+            let ctx = this.gaugeCanvases[canvasId]?.ctx;
+            if (!ctx) {
+                ctx = canvas.getContext('2d');
+                this.gaugeCanvases[canvasId] = { ctx, sensorId: sensor.id };
+            } else {
+                // Update mapping to use current sensor ID
+                this.gaugeCanvases[canvasId].sensorId = sensor.id;
+            }
+
+            // Draw gauge with the correct sensor data
+            this.drawGauge(canvas, ctx, sensor.id);
+        });
+
+        // Cleanup: Remove any canvases that no longer have a corresponding sensor in the gauge list
+        const validGaugeIds = new Set(sensorsForGauges.map(s => `gauge_${s.id}`));
+        [...leftPanel.children, ...rightPanel.children].forEach(child => {
+            if (child.tagName === 'CANVAS' && !validGaugeIds.has(child.id)) {
+                child.remove();
+                delete this.gaugeCanvases[child.id];
             }
         });
     }
-
     // Utility: Adjust color brightness
     adjustBrightness(hex, percent) {
         // Remove # if present
@@ -523,15 +609,14 @@ class GreenhousePresenter {
         this.currentSensor = sensor;
         const sensorData = this.sensorValues[sensor.id];
 
-        // Check if this is an actuator
-        const actuatorIds = ['fan1', 'fan2', 'pump', 'lamp1', 'lamp2'];
-        const isActuator = actuatorIds.includes(sensor.id);
+        // Check if this is an actuator using the isActuator flag
+        const isActuator = sensor.isActuator === true;
 
         // Update popup information
         document.getElementById('popupIcon').innerHTML = this.getSVGIcon(sensor.svg, this.toHex(sensor.color));
-        document.getElementById('popupTitle').textContent = sensor.name;
+        document.getElementById('popupTitle').textContent = sensor.id;
 
-        // For actuators, hide detailed info
+        // For actuators, hide detailed sensor info
         const sensorInfoDiv = document.querySelector('.sensor-info');
         const sensorValueDiv = document.querySelector('.sensor-value');
         const sensorStatusDiv = document.querySelector('.sensor-status');
@@ -541,7 +626,7 @@ class GreenhousePresenter {
             sensorInfoDiv.style.display = 'none';
             sensorValueDiv.style.display = 'none';
             sensorStatusDiv.style.display = 'none';
-        } else {
+        } else if (sensorData) {
             // Show sensor details for regular sensors
             sensorInfoDiv.style.display = 'grid';
             sensorValueDiv.style.display = 'block';
@@ -552,6 +637,17 @@ class GreenhousePresenter {
             document.getElementById('sensorPosition').textContent = `(${sensor.position.x.toFixed(1)}, ${sensor.position.y.toFixed(1)}, ${sensor.position.z.toFixed(1)})`;
             document.getElementById('lastUpdate').textContent = sensorData.lastUpdate.toLocaleTimeString();
             document.getElementById('batteryLevel').textContent = `${sensorData.battery}%`;
+        } else {
+            // No data available yet
+            sensorInfoDiv.style.display = 'grid';
+            sensorValueDiv.style.display = 'block';
+            sensorStatusDiv.style.display = 'flex';
+
+            document.getElementById('sensorValue').textContent = `-- ${sensor.unit}`;
+            document.getElementById('sensorId').textContent = sensor.id;
+            document.getElementById('sensorPosition').textContent = `(${sensor.position.x.toFixed(1)}, ${sensor.position.y.toFixed(1)}, ${sensor.position.z.toFixed(1)})`;
+            document.getElementById('lastUpdate').textContent = 'Waiting for data...';
+            document.getElementById('batteryLevel').textContent = '--';
         }
 
         // Show/hide actuator controls
@@ -665,24 +761,13 @@ class GreenhousePresenter {
             // Get authentication token
             const token = window.authManager ? window.authManager.token : sessionStorage.getItem('jwt_token');
 
-            // Map actuator IDs to proper names
-            const actuatorMap = {
-                'fan1': 'Fan1',
-                'fan2': 'Fan2',
-                'pump': 'Pump',
-                'lamp1': 'Bulb1',
-                'lamp2': 'Bulb2'
-            };
-
-            const actuatorName = actuatorMap[actuatorId] || actuatorId;
+            // Map actuator IDs to proper names - REMOVED: Using direct IDs from discovery
+            // We use the ID as provided by the API/Discovery
+            const actuatorName = actuatorId;
 
             // Send control command to API (using Query Params as expected by ActuatorResource)
-            const response = await fetch(`${API_CONFIG.ACTUATORS_URL}/${actuatorName}/command?command=${command}`, {
-                method: 'POST',
-                headers: {
-                    // 'Content-Type': 'application/json' // Not needed for query params
-                },
-                credentials: 'include'
+            const response = await authManager.fetchWithAuth(`${API_CONFIG.ACTUATORS_URL}/${actuatorName}/command?command=${command}`, {
+                method: 'POST'
             });
 
             if (response.ok) {
@@ -711,21 +796,11 @@ class GreenhousePresenter {
 
     async fetchActuatorState(actuatorId) {
         try {
-            // Map actuator IDs to proper names
-            const actuatorMap = {
-                'fan1': 'Fan1',
-                'fan2': 'Fan2',
-                'pump': 'Pump',
-                'lamp1': 'Bulb1',
-                'lamp2': 'Bulb2'
-            };
-
-            const actuatorName = actuatorMap[actuatorId] || actuatorId;
+            // Map actuator IDs - REMOVED: Using direct IDs
+            const actuatorName = actuatorId;
 
             // Fetch actuator data from API
-            const response = await fetch(`${API_CONFIG.ACTUATORS_URL}/${actuatorName}`, {
-                credentials: 'include'
-            });
+            const response = await authManager.fetchWithAuth(`${API_CONFIG.ACTUATORS_URL}/${actuatorName}`);
 
             if (response.ok) {
                 const actuator = await response.json();
@@ -1011,26 +1086,22 @@ class GreenhousePresenter {
                 <path d="M14 4v10a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0z"/>
                 <path d="M12 14v4"/>
             </svg>`,
-            droplet: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+            temperature: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+            </svg>`,
+            humidity: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
                 <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
             </svg>`,
-            plant: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
-                <path d="M12 22v-8m0 0c-2-3-5-5-5-8a5 5 0 0 1 10 0c0 3-3 5-5 8z"/>
-                <path d="M7 12c0-3 2-5 5-5s5 2 5 5"/>
+            soil_moisture: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                <path d="M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
             </svg>`,
-            sun: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
-                <circle cx="12" cy="12" r="4"/>
-                <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+            light: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
             </svg>`,
-            wind: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
-                <path d="M9 10h6a3 3 0 0 1 0 6H9m0-6a3 3 0 0 0 0-6h6m-6 6v6"/>
-            </svg>`,
-            water: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
-                <path d="M2 12h4l3-9 4 18 3-9h4"/>
-            </svg>`,
-            flask: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
-                <path d="M10 2v8L6 18a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l-4-8V2"/>
-                <path d="M8 2h8"/>
+            water_level: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <path d="M12 2v20M2 12h20"/>
             </svg>`,
             gauge: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
                 <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/>
@@ -1047,6 +1118,14 @@ class GreenhousePresenter {
             lightbulb: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
                 <path d="M9 18h6m-3-5v5m0-13a5 5 0 0 1 5 5c0 3-2 4-2 7H9c0-3-2-4-2-7a5 5 0 0 1 5-5z"/>
                 <path d="M9 21h6"/>
+            </svg>`,
+            heater: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <path d="M5 12h14M5 16h14M5 8h14M9 4v2M15 4v2M9 18v2M15 18v2"/>
+            </svg>`,
+            led: `<svg viewBox="0 0 24 24" fill="none" stroke="${colorHex}" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <circle cx="12" cy="12" r="4" fill="${colorHex}"/>
+                <path d="M18 6l2-2M6 18l-2 2M6 6L4 4M18 18l2 2"/>
             </svg>`
         };
 
@@ -1107,7 +1186,7 @@ class GreenhousePresenter {
             if (this.deferredPrompt) {
                 this.deferredPrompt.prompt();
                 const { outcome } = await this.deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
+                console.log(`User response to the install prompt: ${outcome} `);
                 this.deferredPrompt = null;
                 this.hideInstallPromotion();
             }
@@ -1126,6 +1205,7 @@ class GreenhousePresenter {
 
 // Create and export global instance
 export const mvp = new GreenhousePresenter();
+export const greenhousePresenter = mvp; // Alias for app-init.js
 
 // Make available globally for non-module scripts
 window.mvp = mvp;

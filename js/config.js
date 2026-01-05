@@ -26,6 +26,14 @@ export const API_CONFIG = {
         return `${this.BASE_URL}${this.IAM_PATH}/identities`;
     },
 
+    get GREENHOUSES_URL() {
+        return `${this.BASE_URL}${this.API_PATH}/greenhouses`;
+    },
+
+    get SMART_GREENHOUSE_API_URL() {
+        return `${this.BASE_URL}${this.API_PATH}`;
+    },
+
     // Polling interval for sensor data (in milliseconds)
     SENSOR_UPDATE_INTERVAL: 5000, // 5 seconds
 

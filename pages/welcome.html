@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse - Welcome</title>
+
+    <!-- PWA Metadata -->
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="description" content="Monitor and control your greenhouse with real-time 3D visualization">
+    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" type="image/png" href="../icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="../icons/icon-192x192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/welcome.css">
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+    <div class="floating-element float-1"></div>
+    <div class="floating-element float-2"></div>
+    <div class="floating-element float-3"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🌱</span>
+                Smart Greenhouse
+            </div>
+            <button class="header-btn" onclick="redirectToLogin()">Sign In</button>
+        </header>
+
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-badge">🚀 Next-Generation Agriculture</div>
+                <h1>Monitor Your Greenhouse in Real-Time</h1>
+                <p class="hero-subtitle">
+                    Experience cutting-edge 3D visualization, live sensor data, and intelligent automation
+                    for optimal plant growth. Transform your greenhouse into a smart, data-driven ecosystem.
+                </p>
+                <div class="cta-buttons">
+                    <button class="btn-primary" onclick="redirectToLogin()">
+                        <span>Get Started</span>
+                        <span>→</span>
+                    </button>
+                    <button class="btn-secondary" onclick="scrollToFeatures()">Learn More</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="features" id="features">
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🌡️</span>
+                    <h3 class="feature-title">Real-Time Monitoring</h3>
+                    <p class="feature-description">
+                        Track temperature, humidity, soil moisture, and more with live sensor updates displayed in
+                        beautiful gauges.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">🎮</span>
+                    <h3 class="feature-title">3D Visualization</h3>
+                    <p class="feature-description">
+                        Interact with your greenhouse in stunning 3D. Rotate, zoom, and click on sensors for detailed
+                        information.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">📊</span>
+                    <h3 class="feature-title">Historical Analytics</h3>
+                    <p class="feature-description">
+                        View trends over time with interactive charts. Analyze patterns to optimize growing conditions.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">⚡</span>
+                    <h3 class="feature-title">Smart Controls</h3>
+                    <p class="feature-description">
+                        Control actuators remotely. Turn lights, fans, and irrigation on or off with a single click.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">📱</span>
+                    <h3 class="feature-title">Progressive Web App</h3>
+                    <p class="feature-description">
+                        Install on any device. Works offline and provides a native app-like experience.
+                    </p>
+                </div>
+
+                <div class="feature-card">
+                    <span class="feature-icon">🔒</span>
+                    <h3 class="feature-title">Secure Access</h3>
+                    <p class="feature-description">
+                        OAuth 2.1 authentication with PKCE ensures your greenhouse data stays private and secure.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Smart Greenhouse. Built with passion for sustainable agriculture.</p>
+        </footer>
+    </div>
+
+    <script type="module" src="../js/welcome.js"></script>
+</body>
+
+</html>

@@ -78,7 +78,7 @@ body {
     /* Fond noir semi-transparent unifié */
     color: white;
     border: none;
-    padding: 14px 20px;
+    padding: 16px 32px;
     border-radius: 12px;
     cursor: pointer;
     font-size: 14px;
@@ -90,6 +90,8 @@ body {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 120px;
+    white-space: nowrap;
 }
 
 .btn:hover {
@@ -121,18 +123,19 @@ body {
 /* User Info Display */
 .user-info {
     background: rgba(0, 0, 0, 0.6);
-    /* Fond noir semi-transparent unifié */
     color: white;
-    padding: 14px 20px;
+    padding: 16px 32px;
     border-radius: 12px;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 150px;
+    white-space: nowrap;
 }
 
 .user-info::before {
@@ -142,6 +145,58 @@ body {
 
 #userName {
     color: #ffffff;
+}
+
+/* Greenhouse Selector */
+.greenhouse-selector {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 16px 24px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    min-width: 200px;
+}
+
+.greenhouse-selector label {
+    color: #ffffff;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.greenhouse-dropdown {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 150px;
+    transition: all 0.3s ease;
+}
+
+.greenhouse-dropdown:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.greenhouse-dropdown:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.greenhouse-dropdown option {
+    background: #1e293b;
+    color: white;
 }
 
 /* Popup Styles */
