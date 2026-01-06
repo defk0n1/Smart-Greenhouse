@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse - Admin Portal</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="icons/icon-192x192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/loading.css">
+    <link rel="stylesheet" href="css/modal.css">
+    <link rel="stylesheet" href="css/filters.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <p id="loading-text">Initializing Admin Portal...</p>
+    </div>
+
+    <div id="app" style="display: none;">
+        <header class="top-nav">
+            <div class="nav-brand">
+                <i class="fas fa-leaf"></i> Admin
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-view="dashboard"><i class="fas fa-chart-line"></i>
+                        Dashboard</a></li>
+                <li><a href="#" class="nav-link" data-view="users"><i class="fas fa-users"></i> Users</a></li>
+                <li><a href="#" class="nav-link" data-view="greenhouses"><i class="fas fa-warehouse"></i>
+                        Greenhouses</a></li>
+                <li><a href="#" class="nav-link" data-view="sensors"><i class="fas fa-thermometer-half"></i> Sensors</a>
+                </li>
+                <li><a href="#" class="nav-link" data-view="actuators"><i class="fas fa-cogs"></i> Actuators</a></li>
+            </ul>
+
+            <div class="nav-user">
+                <span id="user-info-display">Loading...</span>
+                <button id="logout-btn" class="logout-btn-sm">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <header>
+                <h1 id="page-title">Dashboard</h1>
+            </header>
+            <div id="main-content">
+                <!-- Dynamic Content Loaded Here -->
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/init.js"></script>
+</body>
+
+</html>

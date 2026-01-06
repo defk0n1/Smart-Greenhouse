@@ -1,0 +1,29 @@
+/* Filter Bar Styles */
+.filter-bar {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-card);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.filter-bar label {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.filter-bar select {
+    padding: 0.5rem 1rem;
+    background: var(--bg-dark);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    min-width: 200px;
+}
+
+.filter-bar select:hover {
+    border-color: var(--accent);
+}

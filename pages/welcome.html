@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Greenhouse Admin - Welcome</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="../icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../icons/icon-16x16.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="../icons/icon-192x192.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#3b82f6">
+    <link rel="stylesheet" href="../css/welcome.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Animated Background Elements -->
+    <div class="bg-animation"></div>
+    <div class="floating-element float-1"></div>
+    <div class="floating-element float-2"></div>
+    <div class="floating-element float-3"></div>
+
+    <div class="welcome-container">
+        <header>
+            <div class="logo"><i class="fas fa-shield-alt"></i> Admin Portal</div>
+        </header>
+
+        <main class="hero">
+            <div class="hero-content">
+                <h1>Manage Your Ecosystem<br><span class="highlight">With Precision</span></h1>
+                <p>Advanced control panel for user management, device provisioning, and system monitoring.</p>
+                <div class="cta-group">
+                    <button class="btn-primary" onclick="redirectToLogin()">Access Dashboard</button>
+                    <button class="btn-secondary" onclick="scrollToFeatures()">Learn More</button>
+                </div>
+            </div>
+        </main>
+
+        <section id="features" class="features">
+            <div class="feature-card">
+                <i class="fas fa-users-cog"></i>
+                <h3>User Management</h3>
+                <p>Control access, manage roles, and monitor user activity across all greenhouses.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-microchip"></i>
+                <h3>Device Provisioning</h3>
+                <p>Attach sensors and actuators to specific greenhouses with ease.</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-pie"></i>
+                <h3>System Overview</h3>
+                <p>Real-time analytics and status monitoring for the entire infrastructure.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Smart Greenhouse. Admin Access Only.</p>
+        </footer>
+    </div>
+
+    <script type="module" src="../js/welcome.js"></script>
+</body>
+
+</html>
